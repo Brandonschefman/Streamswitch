@@ -1,22 +1,1202 @@
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="nl">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>StreamSwitch Test</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#08080f" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="StreamSwitch" />
+  <title>StreamSwitch</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
-    body { background: #08080f; color: #00e5a0; font-family: sans-serif; 
-           display: flex; align-items: center; justify-content: center; 
-           min-height: 100vh; margin: 0; flex-direction: column; gap: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #08080f; color: #f0f0f8; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
   </style>
+
+  <style>
+  ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e2e;border-radius:2px}
+  .ss{max-width:430px;margin:0 auto;min-height:100vh}
+  .scr{padding:0 16px 110px}
+  .card{background:#14141f;border:1px solid #1e1e2e;border-radius:18px}
+  .cardh{transition:border-color .2s,transform .15s;cursor:pointer}
+  .cardh:hover{border-color:#2a2a42;transform:translateY(-1px)}
+  .btn{font-family:'Outfit',sans-serif;font-weight:600;border:none;cursor:pointer;border-radius:12px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1}
+  .btn:active{transform:scale(.96)}
+  .bp{background:#00e5a0;color:#08080f;padding:13px 22px;font-size:15px}
+  .bp:hover{filter:brightness(1.1)}
+  .bg{background:#1e1e2e;color:#f0f0f8;padding:10px 18px;font-size:14px}
+  .bg:hover{background:#2a2a42}
+  .bd{background:#2a1020;color:#ff3b5c;padding:8px 14px;font-size:13px;border-radius:10px}
+  .bprem{background:linear-gradient(135deg,#f7c948,#ff9500);color:#08080f;padding:13px 22px;font-size:15px}
+  .bsm{padding:7px 12px!important;font-size:12px!important;border-radius:9px!important}
+  .ib{background:#1e1e2e;color:#5a5a7a;border:none;cursor:pointer;border-radius:9px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+  .ib:hover{color:#f0f0f8;background:#2a2a42}
+  .ib-del:hover{color:#ff3b5c;background:#2a1020}
+  .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#101018;border-top:1px solid #1e1e2e;display:flex;z-index:200;padding:8px 0 20px}
+  .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:10px;font-weight:500;color:#5a5a7a;padding:6px 2px;transition:color .15s}
+  .nb.on{color:#00e5a0}
+  .inp{background:#101018;border:1px solid #1e1e2e;border-radius:11px;color:#f0f0f8;font-family:'Outfit',sans-serif;font-size:15px;padding:12px 14px;width:100%;outline:none;transition:border-color .18s;-webkit-appearance:none;appearance:none}
+  .inp:focus{border-color:#00e5a0}
+  .inp option{background:#101018;color:#f0f0f8}
+  .iw{position:relative}
+  .iw .inp{padding-right:44px}
+  .eyeb{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#5a5a7a;display:flex;align-items:center;padding:4px}
+  .lbl{font-size:12px;color:#5a5a7a;margin-bottom:5px;display:block;font-weight:500}
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
+  .ta{background:#002a1a;color:#00e5a0}
+  .tl{background:#2a1800;color:#ff6b35}
+  .ti{background:#1a1a1a;color:#666}
+  .tp{background:#2a2000;color:#f7c948}
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:flex-end;justify-content:center}
+  .sh{background:#14141f;border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:20px 20px 44px;border-top:1px solid #1e1e2e;max-height:92vh;overflow-y:auto}
+  .hndl{width:40px;height:4px;background:#1e1e2e;border-radius:2px;margin:0 auto 20px}
+  .hero{background:linear-gradient(135deg,#002a1a,#001a10);border:1px solid #004a30;border-radius:20px;padding:24px;text-align:center}
+  .heroamt{font-size:52px;font-weight:900;color:#00e5a0;letter-spacing:-2px;line-height:1}
+  .mrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+  .mrow::-webkit-scrollbar{display:none}
+  .chip{flex-shrink:0;border-radius:10px;padding:8px 12px;font-size:11px;font-weight:700;text-align:center;min-width:52px}
+  .sep{height:1px;background:#1e1e2e;margin:14px 0}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+  .binge-box{background:linear-gradient(135deg,#001a2a,#000a15);border:1px solid #003a5a;border-radius:14px;padding:14px 16px}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .fu{animation:fu .3s ease forwards}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:#1e1e2e;border-radius:2px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#00e5a0;border-radius:50%;cursor:pointer}
+
+  </style>
+
 </head>
 <body>
-  <div style="font-size:52px">📺</div>
-  <h1>StreamSwitch werkt!</h1>
-  <p style="color:#888">Vercel deployment OK</p>
-  <script>
-    document.querySelector('p').textContent = 'Geladen op: ' + new Date().toLocaleTimeString();
-  </script>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useMemo, useEffect, useCallback } = React;
+
+// ─── CONSTANTEN ───────────────────────────────────────────────────────────────
+
+const SERVICES = [
+{ id:“netflix”,   name:“Netflix”,     price:17.99, color:”#E50914”, icon:“🎬”, url:“https://netflix.com”,       deepLink:“netflix://”    },
+{ id:“prime”,     name:“Prime Video”, price:8.99,  color:”#00A8E0”, icon:“📦”, url:“https://primevideo.com”,    deepLink:“aiv://”        },
+{ id:“disney”,    name:“Disney+”,     price:13.99, color:”#113CCF”, icon:“🏰”, url:“https://disneyplus.com”,    deepLink:“disneyplus://” },
+{ id:“hbo”,       name:“HBO Max”,     price:15.99, color:”#7B2FBE”, icon:“👑”, url:“https://play.max.com”,      deepLink:“max://”        },
+{ id:“apple”,     name:“Apple TV+”,   price:9.99,  color:”#888888”, icon:“🍎”, url:“https://tv.apple.com”,      deepLink:“videos://”     },
+{ id:“videoland”, name:“Videoland”,   price:7.99,  color:”#FF6B00”, icon:“🇳🇱”, url:“https://www.videoland.com”, deepLink:“videoland://”  },
+];
+
+const TMDB_KEY  = “8a6c1e23359e4993fe7f24755991788d”;
+const TMDB_BASE = “https://api.themoviedb.org/3”;
+const TMDB_IMG  = “https://image.tmdb.org/t/p/w500”;
+const TMDB_PROV = [
+{ tmdbId:8,   serviceId:“netflix”   },
+{ tmdbId:119, serviceId:“prime”     },
+{ tmdbId:337, serviceId:“disney”    },
+{ tmdbId:384, serviceId:“hbo”       },
+{ tmdbId:350, serviceId:“apple”     },
+{ tmdbId:39,  serviceId:“videoland” },
+];
+
+const MONTHS = [“Jan”,“Feb”,“Mrt”,“Apr”,“Mei”,“Jun”,“Jul”,“Aug”,“Sep”,“Okt”,“Nov”,“Dec”];
+
+const G = {
+bg:”#08080f”, surface:”#101018”, card:”#14141f”, border:”#1e1e2e”,
+accent:”#00e5a0”, warn:”#ff6b35”, danger:”#ff3b5c”,
+text:”#f0f0f8”, muted:”#5a5a7a”, premium:”#f7c948”,
+};
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+const genId    = () => Math.random().toString(36).slice(2,9);
+const addDays  = (n) => { const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().split(“T”)[0]; };
+const daysLeft = (s) => { if(!s) return 999; return Math.ceil((new Date(s)-new Date())/86400000); };
+const fmt      = (n) => n!=null ? `€${Number(n).toFixed(0)}` : “—”;
+const svc      = (id) => SERVICES.find(s=>s.id===id) || SERVICES[0];
+
+const LS = {
+get:(k,d)=>{ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):d; }catch{ return d; } },
+set:(k,v)=>{ try{ localStorage.setItem(k,JSON.stringify(v)); }catch{} },
+};
+
+// ── Binge berekening ──────────────────────────────────────────────────────────
+// Geeft terug hoeveel weken nodig zijn om een show af te kijken
+// en hoeveel abonnementsmaanden dat betekent
+const calcBinge = (episodes, epDuration, eveningsPerWeek, minsPerEvening=120) => {
+if (!episodes || episodes < 1) return null;
+const totalMins   = episodes * epDuration;
+const minsPerWeek = eveningsPerWeek * minsPerEvening;
+const weeks       = Math.ceil(totalMins / minsPerWeek);
+const months      = Math.ceil(weeks / 4.3);
+return { totalMins, weeks, months };
+};
+
+// ── Centrale besparingsberekening ────────────────────────────────────────────
+const calcSavings = (subs, plan) => {
+const huidigJaar = subs.reduce((s,a)=>s+a.price,0)*12;
+if (!plan?.length) return { huidigJaar, strategieJaar:null, besparing:null };
+const strategieJaar = plan.filter(m=>m.type===“active”).reduce((s,m)=>s+m.price,0);
+return { huidigJaar, strategieJaar, besparing:Math.max(0,huidigJaar-strategieJaar) };
+};
+
+// ── Deep link opener ──────────────────────────────────────────────────────────
+const openApp = (url, deepLink) => {
+const mob = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
+if (!mob||!deepLink) { window.open(url,”_blank”); return; }
+const a=document.createElement(“a”); a.href=deepLink; a.style.display=“none”;
+document.body.appendChild(a); a.click(); document.body.removeChild(a);
+const t=setTimeout(()=>window.open(url,”_blank”),1800);
+window.addEventListener(“blur”,()=>clearTimeout(t),{once:true});
+};
+
+// ─── DEFAULT DATA ─────────────────────────────────────────────────────────────
+
+const DEF_SUBS = [
+{ id:“s1”, serviceId:“netflix”, name:“Netflix”, price:17.99, color:”#E50914”, icon:“🎬”, url:“https://netflix.com”, renewalDate:addDays(4),  autoRenew:true },
+{ id:“s2”, serviceId:“disney”,  name:“Disney+”, price:13.99, color:”#113CCF”, icon:“🏰”, url:“https://disneyplus.com”, renewalDate:addDays(18), autoRenew:true },
+];
+const DEF_WL = [
+{ id:“w1”, title:“The Bear”,    platform:“disney”, type:“series”,  episodes:18, epDuration:45, seasons:2, status:“watching”,   evenings:3 },
+{ id:“w2”, title:“Oppenheimer”, platform:“prime”,  type:“movie”,   episodes:1,  epDuration:180,seasons:1, status:“not_started”,evenings:3 },
+{ id:“w3”, title:“Succession”,  platform:“hbo”,    type:“series”,  episodes:39, epDuration:60, seasons:4, status:“finished”,   evenings:3 },
+];
+
+// ─── SVG ICONEN ───────────────────────────────────────────────────────────────
+
+const IC = {
+dashboard:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>`,
+subs:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
+list:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>`,
+film:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="2" y1="17" x2="7" y2="17"/></svg>`,
+switch:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+trash:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4h6v2"/></svg>`,
+edit:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+open:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+crown:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 20h18"/><path d="M5 20V10l7-6 7 6v10"/></svg>`,
+check:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+plus:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+lock:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+eye:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+eyeoff:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+arrow:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`,
+star:     `<svg viewBox="0 0 24 24" fill="#f7c948" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+x:        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+clock:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+zap:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+};
+
+const Ico = ({n,size=16}) => (
+<span style={{display:“inline-flex”,alignItems:“center”,width:size,height:size,flexShrink:0}}
+dangerouslySetInnerHTML={{__html:`<svg width="${size}" height="${size}" ${IC[n]?.slice(4)}`}} />
+);
+
+const Toggle = ({value,onChange,disabled=false}) => (
+<button onClick={()=>!disabled&&onChange(!value)}
+style={{width:46,height:26,borderRadius:13,border:“none”,cursor:disabled?“not-allowed”:“pointer”,
+background:value&&!disabled?G.accent:G.border,transition:“background .18s”,
+position:“relative”,flexShrink:0,opacity:disabled?0.4:1}}>
+<div style={{width:20,height:20,borderRadius:“50%”,background:“white”,position:“absolute”,
+top:3,left:value&&!disabled?23:3,transition:“left .18s”}}/>
+</button>
+);
+
+// ─── CSS ──────────────────────────────────────────────────────────────────────
+
+const CSS = “”;
+
+// ─── BINGE CALCULATOR COMPONENT ───────────────────────────────────────────────
+
+function BingeCalc({ episodes, epDuration, setEpDuration, evenings, setEvenings, result }) {
+if (!episodes || episodes < 2) return null;
+return (
+<div className="binge-box" style={{marginTop:14}}>
+<div style={{display:“flex”,alignItems:“center”,gap:8,marginBottom:12}}>
+<Ico n="clock" size={16}/>
+<p style={{fontWeight:700,fontSize:14,color:G.accent}}>Binge Calculator</p>
+</div>
+
+```
+  <div style={{marginBottom:12}}>
+    <label className="lbl">Afleveringsduur</label>
+    <div style={{display:"flex",gap:8}}>
+      {[30,45,60].map(m=>(
+        <button key={m} className="btn bsm" onClick={()=>setEpDuration(m)}
+          style={{flex:1,background:epDuration===m?G.accent:G.border,color:epDuration===m?"#08080f":G.text}}>
+          {m} min
+        </button>
+      ))}
+    </div>
+  </div>
+
+  <div style={{marginBottom:12}}>
+    <label className="lbl">Avonden per week: <strong style={{color:G.text}}>{evenings}</strong></label>
+    <input type="range" min={1} max={7} value={evenings} onChange={e=>setEvenings(Number(e.target.value))}/>
+    <div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:G.muted,marginTop:4}}>
+      <span>1 avond</span><span>7 avonden</span>
+    </div>
+  </div>
+
+  {result && (
+    <div style={{background:"rgba(0,229,160,.08)",border:"1px solid rgba(0,229,160,.2)",borderRadius:12,padding:12,textAlign:"center"}}>
+      <p style={{fontSize:13,color:G.muted,marginBottom:4}}>
+        {episodes} afl. × {epDuration} min = <strong style={{color:G.text}}>{Math.round(result.totalMins/60)}u {result.totalMins%60}m</strong> totaal
+      </p>
+      <p style={{fontSize:16,fontWeight:800,color:G.accent}}>
+        ≈ {result.weeks} {result.weeks===1?"week":"weken"} om af te kijken
+      </p>
+      <p style={{fontSize:12,color:G.muted,marginTop:4}}>
+        → Aanbevolen: <strong style={{color:G.text}}>{result.months} maand{result.months!==1?"en":""}</strong> abonnement
+      </p>
+    </div>
+  )}
+</div>
+```
+
+);
+}
+
+// ─── WATCHLIST ITEM KAARTJE ───────────────────────────────────────────────────
+
+function WatchCard({ item, onEdit, onDelete, onToggleWatched }) {
+const service  = svc(item.platform);
+const binge    = item.type===“series” ? calcBinge(item.episodes, item.epDuration||45, item.evenings||3) : null;
+const watched  = item.status===“finished”;
+const watching = item.status===“watching”;
+
+return (
+<div className="card" style={{marginBottom:10,padding:16,opacity:watched?0.55:1}}>
+<div style={{display:“flex”,alignItems:“flex-start”,gap:12}}>
+<div style={{width:48,height:48,borderRadius:12,background:service.color+“22”,border:`2px solid ${service.color}40`,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:24,flexShrink:0}}>
+{service.icon}
+</div>
+<div style={{flex:1,minWidth:0}}>
+<p style={{fontWeight:700,fontSize:15,textDecoration:watched?“line-through”:“none”,overflow:“hidden”,textOverflow:“ellipsis”,whiteSpace:“nowrap”}}>{item.title}</p>
+<div style={{display:“flex”,gap:6,flexWrap:“wrap”,marginTop:5}}>
+<span className="tag ti" style={{fontSize:10}}>{service.name}</span>
+<span className="tag ti" style={{fontSize:10}}>{item.type===“movie”?“🎬 Film”:“📺 Serie”}</span>
+{watching && <span className="tag tl" style={{fontSize:10}}>▶ Bezig</span>}
+{watched  && <span className="tag ta" style={{fontSize:10}}>✓ Klaar</span>}
+</div>
+</div>
+<div style={{display:“flex”,flexDirection:“column”,gap:6}}>
+<button className=“ib” onClick={()=>onEdit(item)}><Ico n="edit"/></button>
+<button className=“ib ib-del” onClick={()=>onDelete(item.id)}><Ico n="trash"/></button>
+</div>
+</div>
+
+```
+  {/* Binge info */}
+  {binge && !watched && (
+    <div style={{marginTop:10,padding:"10px 12px",background:G.surface,borderRadius:12,border:`1px solid ${G.border}`}}>
+      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+        <Ico n="clock" size={12}/>
+        <p style={{fontSize:12,color:G.muted}}>Geschatte kijktijd</p>
+      </div>
+      <p style={{fontSize:13,fontWeight:700,color:G.accent}}>{binge.weeks} weken · {binge.months} maand{binge.months!==1?"en":""} {service.name}</p>
+      {binge.months > 1 && (
+        <p style={{fontSize:11,color:G.muted,marginTop:2}}>💡 Plan {binge.months} opeenvolgende maanden {service.name}</p>
+      )}
+    </div>
+  )}
+
+  {/* Markeer als gekeken */}
+  {!watched && (
+    <button className="btn bg" style={{width:"100%",marginTop:10,padding:"8px",fontSize:13}}
+      onClick={()=>onToggleWatched(item.id,watched)}>
+      {watching ? "✅ Markeer als klaar" : "▶ Begin met kijken"}
+    </button>
+  )}
+</div>
+```
+
+);
+}
+
+// ─── WATCHLIST SHEET ──────────────────────────────────────────────────────────
+
+function WatchSheet({ item, onSave, onClose }) {
+const [form, setForm] = useState(item || {
+title:””, platform:“netflix”, type:“series”,
+episodes:10, epDuration:45, seasons:1, status:“not_started”, evenings:3
+});
+
+const upd = (k,v) => setForm(f=>({…f,[k]:v}));
+const binge = form.type===“series” ? calcBinge(form.episodes, form.epDuration, form.evenings) : null;
+
+return (
+<div className=“ov” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="sh">
+<div className="hndl"/>
+<h3 style={{fontWeight:800,fontSize:18,marginBottom:18}}>{item?“Bewerken”:“Toevoegen”}</h3>
+<div style={{display:“flex”,flexDirection:“column”,gap:13}}>
+
+```
+      <div><label className="lbl">Titel</label>
+        <input className="inp" placeholder="Bijv. The Bear" value={form.title} onChange={e=>upd("title",e.target.value)}/>
+      </div>
+
+      <div><label className="lbl">Streamingdienst</label>
+        <select className="inp" value={form.platform} onChange={e=>upd("platform",e.target.value)}>
+          {SERVICES.map(s=><option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
+        </select>
+      </div>
+
+      <div><label className="lbl">Type</label>
+        <div style={{display:"flex",gap:8}}>
+          {[{v:"series",l:"📺 Serie"},{v:"movie",l:"🎬 Film"}].map(({v,l})=>(
+            <button key={v} className="btn bsm" style={{flex:1,background:form.type===v?G.accent:G.border,color:form.type===v?"#08080f":G.text}}
+              onClick={()=>upd("type",v)}>{l}</button>
+          ))}
+        </div>
+      </div>
+
+      {form.type==="series" && <>
+        <div style={{display:"flex",gap:10}}>
+          <div style={{flex:1}}><label className="lbl">Afleveringen</label>
+            <input className="inp" type="text" inputMode="numeric" placeholder="10" value={form.episodes}
+              onChange={e=>upd("episodes",parseInt(e.target.value)||0)}/>
+          </div>
+          <div style={{flex:1}}><label className="lbl">Seizoenen</label>
+            <input className="inp" type="text" inputMode="numeric" placeholder="1" value={form.seasons}
+              onChange={e=>upd("seasons",parseInt(e.target.value)||1)}/>
+          </div>
+        </div>
+        <BingeCalc
+          episodes={form.episodes}
+          epDuration={form.epDuration}
+          setEpDuration={v=>upd("epDuration",v)}
+          evenings={form.evenings}
+          setEvenings={v=>upd("evenings",v)}
+          result={binge}
+        />
+      </>}
+
+      <div style={{display:"flex",gap:8,marginTop:4}}>
+        <button className="btn bp" style={{flex:1,padding:"13px"}} onClick={()=>{ if(form.title.trim()) onSave(form); }}>
+          {item?"Opslaan":"Toevoegen"}
+        </button>
+        <button className="btn bg" style={{flex:1}} onClick={onClose}>Annuleren</button>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+);
+}
+
+// ─── WATCHLIST SCREEN ─────────────────────────────────────────────────────────
+
+function WatchScreen({ watchlist, setWatchlist }) {
+const [showSheet, setShowSheet]   = useState(false);
+const [editItem,  setEditItem]    = useState(null);
+const [filter,    setFilter]      = useState(“all”); // all | not_started | watching | finished
+
+const save = (form) => {
+const updated = { …form, id: editItem?.id || genId() };
+setWatchlist(prev => {
+const next = editItem ? prev.map(x=>x.id===editItem.id?updated:x) : […prev, updated];
+LS.set(“ss_watchlist”, next);
+return next;
+});
+setShowSheet(false); setEditItem(null);
+};
+
+const del = (id) => setWatchlist(prev=>{ const n=prev.filter(x=>x.id!==id); LS.set(“ss_watchlist”,n); return n; });
+
+const toggleWatched = (id, wasWatched) => setWatchlist(prev=>{
+const n = prev.map(x=>x.id===id ? {…x, status: wasWatched?“not_started”:x.status===“watching”?“finished”:“watching”} : x);
+LS.set(“ss_watchlist”,n); return n;
+});
+
+const filters = [
+{ v:“all”,         l:“Alles”,    count: watchlist.length },
+{ v:“not_started”, l:“Te kijken”,count: watchlist.filter(w=>w.status===“not_started”).length },
+{ v:“watching”,    l:“Bezig”,    count: watchlist.filter(w=>w.status===“watching”).length },
+{ v:“finished”,    l:“Klaar”,    count: watchlist.filter(w=>w.status===“finished”).length },
+];
+
+const filtered = filter===“all” ? watchlist : watchlist.filter(w=>w.status===filter);
+
+return (
+<div className="scr fu">
+<div style={{padding:“20px 0 14px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>Watchlist</h2>
+<button className=“btn bp bsm” onClick={()=>{setEditItem(null);setShowSheet(true);}}><Ico n="plus"/> Toevoegen</button>
+</div>
+
+```
+  {/* Filter tabs */}
+  <div className="mrow" style={{marginBottom:14}}>
+    {filters.map(f=>(
+      <button key={f.v} onClick={()=>setFilter(f.v)}
+        style={{flexShrink:0,padding:"7px 14px",borderRadius:20,border:"none",cursor:"pointer",fontFamily:"Outfit,sans-serif",fontWeight:600,fontSize:12,
+          background:filter===f.v?G.accent:G.border,color:filter===f.v?"#08080f":G.text}}>
+        {f.l} {f.count>0&&<span style={{opacity:.7}}>({f.count})</span>}
+      </button>
+    ))}
+  </div>
+
+  {filtered.length===0 && (
+    <div className="card" style={{padding:40,textAlign:"center",color:G.muted}}>
+      <p style={{fontSize:40,marginBottom:12}}>🎬</p>
+      <p style={{fontWeight:600,color:G.text,marginBottom:6}}>Nog niks hier</p>
+      <p style={{fontSize:14}}>Voeg een film of serie toe om te beginnen</p>
+    </div>
+  )}
+
+  {filtered.map(item=>(
+    <WatchCard key={item.id} item={item}
+      onEdit={i=>{setEditItem(i);setShowSheet(true);}}
+      onDelete={del}
+      onToggleWatched={toggleWatched}
+    />
+  ))}
+
+  {showSheet && <WatchSheet item={editItem} onSave={save} onClose={()=>{setShowSheet(false);setEditItem(null);}}/>}
+</div>
+```
+
+);
+}
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+
+function Dashboard({ user, subs, watchlist, savings, totalMonthly, getStatus, setSubs, setTab, upgradePremium }) {
+const warnings = subs.filter(s=>daysLeft(s.renewalDate)<=7);
+const activeWL = watchlist.filter(w=>w.status!==“finished”);
+const totalBingeMonths = activeWL.reduce((sum,item)=>{
+if (item.type!==“series”) return sum;
+const b = calcBinge(item.episodes, item.epDuration||45, item.evenings||3);
+return sum + (b?.months||0);
+}, 0);
+
+return (
+<div className="scr fu">
+<div style={{padding:“20px 0 16px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<div>
+<p style={{fontSize:13,color:G.muted}}>Welkom terug 👋</p>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>{user.email.split(”@”)[0]}</h2>
+</div>
+{user.isPremium
+? <span className="tag tp"><Ico n="crown" size={13}/> Premium</span>
+: <button className=“btn bg bsm” style={{color:G.premium,background:”#2a2000”}} onClick={()=>setTab(“settings”)}>✨ Upgrade</button>}
+</div>
+
+```
+  {/* Verlengingswaarschuwingen */}
+  {warnings.map(sub=>{
+    const days = daysLeft(sub.renewalDate);
+    const st   = getStatus(sub);
+    const urgent = days<=5 && st.label==="Laag gebruik";
+    return (
+      <div key={sub.id} className={urgent?"warnbox":"card"} style={{marginBottom:10,padding:"14px 16px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:urgent?12:0}}>
+          <span style={{fontSize:22}}>{sub.icon}</span>
+          <div style={{flex:1}}>
+            <p style={{fontWeight:700,fontSize:14}}>⚠️ {sub.name} verlengt over {days} dag{days!==1?"en":""}</p>
+            {urgent&&<p style={{fontSize:12,color:G.muted,marginTop:2}}>Geen recente activiteit</p>}
+          </div>
+        </div>
+        {urgent&&<div style={{display:"flex",gap:8}}>
+          <button className="btn bd bsm" onClick={()=>setSubs(p=>{const n=p.filter(s=>s.id!==sub.id);LS.set("ss_subs",n);return n;})}>Annuleren</button>
+          <button className="btn bg bsm">Behouden</button>
+        </div>}
+      </div>
+    );
+  })}
+
+  {/* Kosten kaart */}
+  <div className="card" style={{padding:22,marginBottom:12}}>
+    <p style={{fontSize:12,color:G.muted,marginBottom:4}}>Totaal per maand</p>
+    <p style={{fontSize:42,fontWeight:900,letterSpacing:"-2px"}}>
+      €{totalMonthly.toFixed(2).replace(".",",")}
+      <span style={{fontSize:16,color:G.muted,fontWeight:400}}>/mnd</span>
+    </p>
+    <div className="sep"/>
+    <div style={{display:"flex",justifyContent:"space-between"}}>
+      <div><p style={{fontSize:11,color:G.muted}}>Huidig per jaar</p><p style={{fontWeight:700,fontSize:18}}>{fmt(savings.huidigJaar)}</p></div>
+      <div style={{textAlign:"right"}}><p style={{fontSize:11,color:G.muted}}>Met Switch Strategy</p>
+        <p style={{fontWeight:700,fontSize:18,color:G.accent}}>{savings.strategieJaar!==null?fmt(savings.strategieJaar):"Genereer plan →"}</p></div>
+    </div>
+  </div>
+
+  {/* Besparing hero */}
+  <div className="hero" style={{marginBottom:12}}>
+    {savings.besparing!==null?(
+      <>
+        <p style={{fontSize:13,color:"#7abf9a",marginBottom:6}}>Besparing met Switch Strategy</p>
+        <div className="heroamt">{fmt(savings.besparing)}</div>
+        <p style={{fontSize:13,color:"#7abf9a",marginTop:6}}>per jaar · gebaseerd op jouw planning</p>
+      </>
+    ):(
+      <>
+        <p style={{fontSize:13,color:"#7abf9a",marginBottom:6}}>Potentiële besparing</p>
+        <div className="heroamt">{fmt(savings.huidigJaar*0.5)}</div>
+        <p style={{fontSize:13,color:"#7abf9a",marginTop:6}}>per jaar · genereer een Switch Plan voor exacte cijfers</p>
+      </>
+    )}
+    {!user.isPremium&&<button className="btn bp" style={{marginTop:16}} onClick={()=>setTab("switch")}>Bekijk hoe →</button>}
+  </div>
+
+  {/* Watchlist samenvatting */}
+  {activeWL.length>0&&(
+    <div className="card" style={{padding:16,marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <p style={{fontWeight:700,fontSize:15}}>Watchlist samenvatting</p>
+        <button className="btn bg bsm" onClick={()=>setTab("watchlist")}>Bekijk alles</button>
+      </div>
+      <div style={{display:"flex",gap:16}}>
+        <div style={{textAlign:"center",flex:1}}>
+          <p style={{fontSize:28,fontWeight:900,color:G.accent}}>{activeWL.length}</p>
+          <p style={{fontSize:11,color:G.muted}}>Te kijken</p>
+        </div>
+        <div style={{width:1,background:G.border}}/>
+        <div style={{textAlign:"center",flex:1}}>
+          <p style={{fontSize:28,fontWeight:900,color:G.premium}}>{totalBingeMonths}</p>
+          <p style={{fontSize:11,color:G.muted}}>Maanden nodig</p>
+        </div>
+        <div style={{width:1,background:G.border}}/>
+        <div style={{textAlign:"center",flex:1}}>
+          <p style={{fontSize:28,fontWeight:900,color:G.warn}}>{new Set(activeWL.map(w=>w.platform)).size}</p>
+          <p style={{fontSize:11,color:G.muted}}>Diensten</p>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* Abonnementen preview */}
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+    <p style={{fontWeight:700,fontSize:16}}>Abonnementen</p>
+    <button className="btn bg bsm" onClick={()=>setTab("subs")}>Alles zien</button>
+  </div>
+  {subs.slice(0,3).map(sub=>{
+    const days = daysLeft(sub.renewalDate);
+    const st   = getStatus(sub);
+    return (
+      <div key={sub.id} className="card cardh" style={{padding:"14px 16px",marginBottom:8,display:"flex",alignItems:"center",gap:12}} onClick={()=>setTab("subs")}>
+        <div style={{width:44,height:44,borderRadius:12,background:sub.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0}}>{sub.icon}</div>
+        <div style={{flex:1}}>
+          <p style={{fontWeight:700}}>{sub.name}</p>
+          <p style={{fontSize:12,color:G.muted}}>Verlengt over {days} dag{days!==1?"en":""}</p>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <p style={{fontWeight:700}}>€{sub.price.toFixed(2)}</p>
+          <span className={`tag ${st.cls}`}><span className="dot" style={{background:st.dot}}/>{st.label}</span>
+        </div>
+      </div>
+    );
+  })}
+</div>
+```
+
+);
+}
+
+// ─── SUBS SCREEN ──────────────────────────────────────────────────────────────
+
+function SubsScreen({ subs, setSubs, watchlist, savings, totalMonthly, getStatus, openAddSub, openEditSub }) {
+return (
+<div className="scr fu">
+<div style={{padding:“20px 0 16px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>Abonnementen</h2>
+<button className="btn bp bsm" onClick={openAddSub}><Ico n="plus"/> Toevoegen</button>
+</div>
+<div className=“card” style={{padding:“14px 16px”,marginBottom:14,display:“flex”,justifyContent:“space-between”}}>
+<div><p style={{fontSize:11,color:G.muted}}>Maandelijks</p><p style={{fontWeight:800,fontSize:20}}>€{totalMonthly.toFixed(2)}</p></div>
+<div style={{textAlign:“right”}}><p style={{fontSize:11,color:G.muted}}>Huidig per jaar</p><p style={{fontWeight:800,fontSize:20}}>{fmt(savings.huidigJaar)}</p></div>
+</div>
+{subs.length===0&&<div className=“card” style={{padding:40,textAlign:“center”,color:G.muted}}><p style={{fontSize:40,marginBottom:12}}>📭</p><p>Geen abonnementen. Voeg er een toe!</p></div>}
+{subs.map(sub=>{
+const days=daysLeft(sub.renewalDate);
+const st=getStatus(sub);
+const wlCount=watchlist.filter(w=>w.platform===sub.serviceId&&w.status!==“finished”).length;
+return (
+<div key={sub.id} className="card" style={{marginBottom:10,padding:16}}>
+<div style={{display:“flex”,alignItems:“center”,gap:12}}>
+<div style={{width:52,height:52,borderRadius:14,background:sub.color+“20”,border:`2px solid ${sub.color}50`,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:28,flexShrink:0}}>{sub.icon}</div>
+<div style={{flex:1}}>
+<p style={{fontWeight:700,fontSize:16}}>{sub.name}</p>
+<p style={{fontSize:12,color:G.muted,marginTop:2}}>Verlengt {days<=0?“vandaag”:`over ${days} dagen`} · {wlCount} titel{wlCount!==1?“s”:””}</p>
+</div>
+<div style={{textAlign:“right”}}>
+<p style={{fontWeight:800,fontSize:18}}>€{sub.price.toFixed(2)}</p>
+<p style={{fontSize:11,color:G.muted}}>/mnd</p>
+</div>
+</div>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,marginTop:12}}>
+<span className={`tag ${st.cls}`}><span className="dot" style={{background:st.dot}}/>{st.label}</span>
+<div style={{display:“flex”,gap:6}}>
+<button className=“ib” title=“App openen” onClick={()=>openApp(sub.url,SERVICES.find(p=>p.id===sub.serviceId)?.deepLink)}><Ico n="open"/></button>
+<button className=“ib” onClick={()=>openEditSub(sub)}><Ico n="edit"/></button>
+<button className=“ib ib-del” onClick={()=>setSubs(p=>{const n=p.filter(s=>s.id!==sub.id);LS.set(“ss_subs”,n);return n;})}><Ico n="trash"/></button>
+</div>
+</div>
+</div>
+);
+})}
+</div>
+);
+}
+
+// ─── NIEUWS SCREEN ────────────────────────────────────────────────────────────
+
+function NewsScreen({ watchlist, setWatchlist, subs }) {
+const [items,   setItems]   = useState([]);
+const [loading, setLoading] = useState(false);
+const [error,   setError]   = useState(””);
+const [filter,  setFilter]  = useState(“all”);
+const [type,    setType]    = useState(“movie”);
+const [detail,  setDetail]  = useState(null);
+const [added,   setAdded]   = useState({});
+const wlTitles = new Set(watchlist.map(w=>w.title.toLowerCase()));
+
+const fetchNews = async (mediaType, providerId) => {
+setLoading(true); setError(””);
+try {
+const url = providerId===“all”
+? `${TMDB_BASE}/discover/${mediaType}?api_key=${TMDB_KEY}&language=nl-NL&sort_by=popularity.desc&watch_region=NL&with_watch_monetization_types=flatrate`
+: `${TMDB_BASE}/discover/${mediaType}?api_key=${TMDB_KEY}&language=nl-NL&sort_by=popularity.desc&watch_region=NL&with_watch_providers=${providerId}&with_watch_monetization_types=flatrate`;
+const res  = await fetch(url);
+if (!res.ok) throw new Error();
+const data = await res.json();
+setItems(data.results?.slice(0,20)||[]);
+} catch { setError(“Nieuws laden mislukt.”); }
+finally  { setLoading(false); }
+};
+
+useEffect(()=>{ fetchNews(“movie”,“all”); },[]);
+
+const handleFilter = (f)=>{ setFilter(f); const p=TMDB_PROV.find(x=>x.serviceId===f); fetchNews(type,p?p.tmdbId:“all”); };
+const handleType   = (t)=>{ setType(t);   const p=TMDB_PROV.find(x=>x.serviceId===filter); fetchNews(t,p?p.tmdbId:“all”); };
+
+const addToWatchlist = (item) => {
+const title    = item.title||item.name||“Onbekend”;
+const platform = TMDB_PROV.find(x=>x.serviceId===filter)?.serviceId || “netflix”;
+const newItem  = { id:genId(), title, platform, type:type===“movie”?“movie”:“series”, episodes:type===“movie”?1:10, epDuration:45, seasons:1, status:“not_started”, evenings:3 };
+setWatchlist(prev=>{ const n=[…prev,newItem]; LS.set(“ss_watchlist”,n); return n; });
+setAdded(a=>({…a,[item.id]:true}));
+setDetail(null);
+};
+
+const isAdded = (item) => added[item.id]||wlTitles.has((item.title||item.name||””).toLowerCase());
+const myProvs = TMDB_PROV.filter(p=>subs.some(s=>s.serviceId===p.serviceId)).map(p=>({…p,…SERVICES.find(s=>s.id===p.serviceId)}));
+
+return (
+<div className="scr fu">
+<div style={{padding:“20px 0 14px”}}>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>Nieuws</h2>
+<p style={{fontSize:13,color:G.muted,marginTop:2}}>Nieuwe films & series op jouw diensten</p>
+</div>
+<div style={{display:“flex”,background:G.surface,borderRadius:12,padding:4,border:`1px solid ${G.border}`,marginBottom:12}}>
+{[{v:“movie”,l:“🎬 Films”},{v:“tv”,l:“📺 Series”}].map(({v,l})=>(
+<button key={v} onClick={()=>handleType(v)} style={{flex:1,padding:“9px”,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:14,borderRadius:9,background:type===v?G.card:“transparent”,color:type===v?G.text:G.muted}}>{l}</button>
+))}
+</div>
+<div className="mrow" style={{marginBottom:14}}>
+<button onClick={()=>handleFilter(“all”)} style={{flexShrink:0,padding:“7px 14px”,borderRadius:20,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:12,background:filter===“all”?G.accent:G.border,color:filter===“all”?”#08080f”:G.text}}>Alles</button>
+{myProvs.map(p=>(
+<button key={p.serviceId} onClick={()=>handleFilter(p.serviceId)} style={{flexShrink:0,padding:“7px 14px”,borderRadius:20,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:12,background:filter===p.serviceId?p.color:G.border,color:filter===p.serviceId?“white”:G.text}}>{p.icon} {p.name}</button>
+))}
+</div>
+{loading&&<div style={{textAlign:“center”,padding:“60px 0”,color:G.muted}}><p style={{fontSize:40,marginBottom:12}}>⏳</p><p>Laden…</p></div>}
+{error&&<div className=“card” style={{padding:20,textAlign:“center”,color:G.danger}}><p>{error}</p><button className=“btn bg” style={{marginTop:12}} onClick={()=>handleFilter(filter)}>Opnieuw</button></div>}
+{!loading&&!error&&(
+<div className="pgrid">
+{items.map(item=>{
+const title  = item.title||item.name||“Onbekend”;
+const poster = item.poster_path?`${TMDB_IMG}${item.poster_path}`:null;
+const rating = item.vote_average?item.vote_average.toFixed(1):”?”;
+const year   = (item.release_date||item.first_air_date||””).slice(0,4);
+const al     = isAdded(item);
+return (
+<div key={item.id} className=“card” style={{overflow:“hidden”,cursor:“pointer”}} onClick={()=>setDetail(item)}>
+<div style={{width:“100%”,aspectRatio:“2/3”,background:G.surface,position:“relative”,overflow:“hidden”}}>
+{poster?<img src={poster} alt={title} style={{width:“100%”,height:“100%”,objectFit:“cover”}}/>:<div style={{width:“100%”,height:“100%”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:40}}>🎬</div>}
+<div style={{position:“absolute”,top:8,left:8,background:“rgba(0,0,0,.75)”,borderRadius:8,padding:“3px 7px”,display:“flex”,alignItems:“center”,gap:3}}>
+<Ico n="star" size={10}/><span style={{fontSize:11,fontWeight:700,color:”#f7c948”}}>{rating}</span>
+</div>
+{al&&<div style={{position:“absolute”,top:8,right:8,background:G.accent,borderRadius:8,padding:“3px 7px”}}><span style={{fontSize:10,fontWeight:700,color:”#08080f”}}>✓</span></div>}
+</div>
+<div style={{padding:“10px 10px 12px”}}>
+<p style={{fontWeight:700,fontSize:13,lineHeight:1.3,marginBottom:4}}>{title}</p>
+<p style={{fontSize:11,color:G.muted,marginBottom:8}}>{year}</p>
+<button className=“btn” style={{width:“100%”,padding:“7px”,fontSize:12,borderRadius:9,background:al?G.border:G.accent,color:al?G.muted:”#08080f”,fontWeight:700}}
+onClick={e=>{e.stopPropagation();if(!al)addToWatchlist(item);}}>{al?“✓ Toegevoegd”:”+ Watchlist”}</button>
+</div>
+</div>
+);
+})}
+</div>
+)}
+{detail&&(
+<div className=“ov” onClick={e=>e.target===e.currentTarget&&setDetail(null)}>
+<div className="sh">
+<div style={{display:“flex”,justifyContent:“flex-end”,marginBottom:16}}><button className=“ib” onClick={()=>setDetail(null)}><Ico n="x"/></button></div>
+<div style={{display:“flex”,gap:14,marginBottom:16}}>
+{detail.poster_path?<img src={`${TMDB_IMG}${detail.poster_path}`} alt=”” style={{width:90,height:135,borderRadius:12,objectFit:“cover”,flexShrink:0}}/>:<div style={{width:90,height:135,borderRadius:12,background:G.surface,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:36,flexShrink:0}}>🎬</div>}
+<div style={{flex:1}}>
+<p style={{fontWeight:800,fontSize:17,lineHeight:1.3,marginBottom:6}}>{detail.title||detail.name}</p>
+<div style={{display:“flex”,gap:6,flexWrap:“wrap”}}>
+<span className="tag ta"><Ico n="star" size={11}/> {detail.vote_average?.toFixed(1)||”?”}</span>
+<span className="tag ti">{(detail.release_date||detail.first_air_date||””).slice(0,4)}</span>
+</div>
+</div>
+</div>
+{detail.overview&&<p style={{fontSize:14,color:G.muted,lineHeight:1.6,marginBottom:16}}>{detail.overview}</p>}
+<button className=“btn bp” style={{width:“100%”,padding:“14px”}} onClick={()=>addToWatchlist(detail)} disabled={isAdded(detail)}>
+{isAdded(detail)?“✓ Al in je watchlist”:”+ Toevoegen aan watchlist”}
+</button>
+</div>
+</div>
+)}
+</div>
+);
+}
+
+// ─── SWITCH STRATEGY SCREEN ───────────────────────────────────────────────────
+
+function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }) {
+
+// Genereer plan op basis van watchlist binge-tijden + abonnementen
+const generateStrategy = () => {
+// Groepeer watchlist per platform met totale maanden
+const platformMonths = {};
+watchlist.filter(w=>w.status!==“finished”).forEach(w=>{
+if (!platformMonths[w.platform]) platformMonths[w.platform]=0;
+if (w.type===“series”) {
+const b = calcBinge(w.episodes, w.epDuration||45, w.evenings||3);
+platformMonths[w.platform] += b?.months||1;
+} else {
+platformMonths[w.platform] += 1;
+}
+});
+
+```
+// Sorteer op meeste maanden nodig
+const sorted = Object.entries(platformMonths)
+  .sort((a,b)=>b[1]-a[1])
+  .map(([serviceId,months])=>({
+    serviceId,
+    months: Math.min(months, 4), // max 4 maanden per dienst per jaar
+    sub: subs.find(s=>s.serviceId===serviceId),
+    service: SERVICES.find(s=>s.id===serviceId),
+  }))
+  .filter(p=>p.service);
+
+// Vul aan met actieve abonnementen die niet in watchlist zitten
+subs.forEach(sub=>{
+  if (!sorted.find(p=>p.serviceId===sub.serviceId)) {
+    sorted.push({ serviceId:sub.serviceId, months:1, sub, service:SERVICES.find(s=>s.id===sub.serviceId) });
+  }
+});
+
+if (!sorted.length) { setStrategy({ plan:Array.from({length:12},(_,i)=>({month:i,type:"pause"})) }); return; }
+
+// Bouw 12-maanden plan
+const plan = [];
+let monthIdx = 0;
+for (const p of sorted) {
+  for (let m=0; m<p.months && monthIdx<12; m++,monthIdx++) {
+    plan.push({
+      month: monthIdx,
+      type: "active",
+      serviceId: p.serviceId,
+      svc: p.service,
+      price: p.sub?.price || p.service.price,
+    });
+  }
+}
+// Vul resterende maanden met pauze
+while (plan.length < 12) {
+  plan.push({ month: plan.length, type:"pause" });
+}
+// Sorteer op maandnummer
+plan.sort((a,b)=>a.month-b.month);
+setStrategy({ plan });
+```
+
+};
+
+if (!user.isPremium) return (
+<div className="scr fu">
+<div style={{padding:“20px 0 16px”}}>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>Switch Strategy</h2>
+<p style={{color:G.muted,fontSize:14,marginTop:4}}>Roteer slim, betaal minder</p>
+</div>
+<div className="hero" style={{marginBottom:16}}>
+<p style={{fontSize:13,color:”#7abf9a”,marginBottom:6}}>Jij kunt besparen</p>
+<div className="heroamt">{fmt(savings.huidigJaar*0.5)}</div>
+<p style={{fontSize:13,color:”#7abf9a”,marginTop:6}}>per jaar (schatting)</p>
+</div>
+<div className="card" style={{padding:20,marginBottom:14}}>
+<p style={{fontWeight:700,marginBottom:12}}>Vergelijking</p>
+<div style={{display:“flex”,justifyContent:“space-between”,marginBottom:8,fontSize:14}}>
+<span style={{color:G.muted}}>Huidig per jaar</span><span style={{fontWeight:700,color:G.danger}}>{fmt(savings.huidigJaar)}</span>
+</div>
+<div style={{display:“flex”,justifyContent:“space-between”,marginBottom:14,fontSize:14}}>
+<span style={{color:G.muted}}>Met Switch Strategy</span><span style={{fontWeight:700,color:G.accent}}>{fmt(savings.huidigJaar*0.5)}</span>
+</div>
+<div style={{background:”#00e5a010”,border:“1px solid #00e5a030”,borderRadius:12,padding:14,textAlign:“center”}}>
+<p style={{fontSize:18,color:G.accent,fontWeight:800}}>{fmt(savings.huidigJaar*0.5)} per jaar</p>
+<p style={{fontSize:11,color:G.muted,marginTop:4}}>Exacte cijfers na upgraden</p>
+</div>
+</div>
+<button className=“btn bprem” style={{width:“100%”,padding:“16px”}} onClick={upgradePremium}><Ico n="crown"/> Upgrade naar Premium — €10/jaar</button>
+</div>
+);
+
+// Watchlist-gebaseerde aanbeveling
+const wlItems = watchlist.filter(w=>w.status!==“finished”);
+const byPlatform = SERVICES.map(s=>({
+…s,
+items: wlItems.filter(w=>w.platform===s.id),
+totalMonths: wlItems.filter(w=>w.platform===s.id&&w.type===“series”)
+.reduce((sum,w)=>{ const b=calcBinge(w.episodes,w.epDuration||45,w.evenings||3); return sum+(b?.months||0); },0),
+})).filter(s=>s.items.length>0);
+
+return (
+<div className="scr fu">
+<div style={{padding:“20px 0 16px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<div>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>Switch Strategy</h2>
+<span className=“tag tp” style={{marginTop:4,display:“inline-flex”}}><Ico n="crown" size={12}/> Premium</span>
+</div>
+<button className="btn bp bsm" onClick={generateStrategy}>{strategy?“Herbereken”:“Genereer Plan”}</button>
+</div>
+
+```
+  {/* Watchlist analyse */}
+  {byPlatform.length>0&&(
+    <div className="card" style={{padding:16,marginBottom:12}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+        <Ico n="zap" size={16}/>
+        <p style={{fontWeight:700,fontSize:15}}>Watchlist analyse</p>
+      </div>
+      {byPlatform.map(s=>(
+        <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:"10px 12px",background:G.surface,borderRadius:12}}>
+          <div style={{width:36,height:36,borderRadius:10,background:s.color+"22",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{s.icon}</div>
+          <div style={{flex:1}}>
+            <p style={{fontWeight:600,fontSize:14}}>{s.name}</p>
+            <p style={{fontSize:12,color:G.muted}}>{s.items.length} titel{s.items.length!==1?"s":""}</p>
+          </div>
+          {s.totalMonths>0&&(
+            <div style={{textAlign:"right"}}>
+              <p style={{fontWeight:700,color:G.accent,fontSize:14}}>{s.totalMonths} mnd</p>
+              <p style={{fontSize:11,color:G.muted}}>nodig</p>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )}
+
+  {!strategy?(
+    <div className="card" style={{padding:40,textAlign:"center",color:G.muted}}>
+      <p style={{fontSize:40,marginBottom:12}}>🔄</p>
+      <p style={{fontWeight:600,color:G.text,marginBottom:6}}>Klaar om te besparen?</p>
+      <p style={{fontSize:14}}>Klik "Genereer Plan" voor een jaarplanning gebaseerd op jouw watchlist en abonnementen.</p>
+    </div>
+  ):(
+    <>
+      <div className="hero" style={{marginBottom:14}}>
+        <p style={{fontSize:13,color:"#7abf9a",marginBottom:6}}>Jaarlijkse besparing</p>
+        <div className="heroamt">{fmt(savings.besparing)}</div>
+        <p style={{fontSize:13,color:"#7abf9a",marginTop:6}}>{fmt(savings.strategieJaar)} met plan vs {fmt(savings.huidigJaar)} huidig per jaar</p>
+      </div>
+      <div className="card" style={{padding:16,marginBottom:12}}>
+        <p style={{fontWeight:700,marginBottom:14}}>Jaarplanning</p>
+        <div className="mrow">
+          {strategy.plan.map(m=>(
+            <div key={m.month} className="chip" style={{background:m.type==="pause"?G.border:(m.svc?.color||G.muted)+"25",border:`1px solid ${m.type==="pause"?G.border:(m.svc?.color||G.muted)+"50"}`,color:m.type==="pause"?G.muted:G.text}}>
+              <div style={{fontSize:16}}>{m.type==="pause"?"⏸":m.svc?.icon||"📺"}</div>
+              <div style={{marginTop:4,fontWeight:700}}>{MONTHS[m.month]}</div>
+              <div style={{fontSize:9,marginTop:2,opacity:.7}}>{m.type==="pause"?"Pauze":(m.svc?.name||"").split(" ")[0]}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="card" style={{padding:16}}>
+        <p style={{fontWeight:700,marginBottom:12}}>Breakdown per maand</p>
+        {strategy.plan.map((m,i)=>(
+          <div key={i} style={{display:"flex",alignItems:"center",gap:12,padding:"10px 0",borderBottom:`1px solid ${G.border}`}}>
+            <div style={{width:36,fontWeight:700,color:G.muted,fontSize:13}}>{MONTHS[m.month]}</div>
+            <div style={{fontSize:20}}>{m.type==="pause"?"⏸":m.svc?.icon||"📺"}</div>
+            <div style={{flex:1}}>
+              <p style={{fontWeight:600,fontSize:14}}>{m.type==="pause"?"Pauze maand":m.svc?.name}</p>
+              {m.type==="active"&&(()=>{
+                const shows=wlItems.filter(w=>w.platform===m.serviceId);
+                if(!shows.length) return null;
+                return <p style={{fontSize:11,color:G.muted,marginTop:2}}>{shows.map(s=>s.title).join(", ")}</p>;
+              })()}
+            </div>
+            <div style={{fontWeight:700,color:m.type==="pause"?G.accent:G.text}}>{m.type==="pause"?"€0":`€${m.price?.toFixed(2)}`}</div>
+          </div>
+        ))}
+        <div style={{display:"flex",justifyContent:"space-between",padding:"12px 0 0",fontWeight:800}}>
+          <span style={{color:G.muted}}>Totaal met Switch Strategy</span><span style={{color:G.accent}}>{fmt(savings.strategieJaar)}</span>
+        </div>
+        <div style={{display:"flex",justifyContent:"space-between",padding:"8px 0 0"}}>
+          <span style={{color:G.muted,fontSize:13}}>Besparing vs. huidig</span><span style={{color:G.accent,fontSize:13,fontWeight:700}}>{fmt(savings.besparing)}</span>
+        </div>
+      </div>
+    </>
+  )}
+</div>
+```
+
+);
+}
+
+// ─── INSTELLINGEN ─────────────────────────────────────────────────────────────
+
+function SettingsScreen({ user, setUser, notifs, setNotifs, upgradePremium, openPwSheet }) {
+return (
+<div className="scr fu">
+<div style={{padding:“20px 0 16px”}}>
+<h2 style={{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}>Instellingen</h2>
+</div>
+<div className="card" style={{marginBottom:14}}>
+<div style={{padding:“16px 16px 12px”}}>
+<p style={{fontSize:11,color:G.muted,fontWeight:700,textTransform:“uppercase”,letterSpacing:“1px”,marginBottom:12}}>Account</p>
+<p style={{fontSize:11,color:G.muted}}>E-mail</p>
+<p style={{fontWeight:600,marginBottom:10}}>{user.email}</p>
+<p style={{fontSize:11,color:G.muted}}>Plan</p>
+<p style={{fontWeight:600,color:user.isPremium?G.premium:G.text}}>{user.isPremium?“⭐ Premium”:“Gratis”}</p>
+</div>
+<div style={{height:1,background:G.border}}/>
+<button className=“btn bg” style={{margin:12,width:“calc(100% - 24px)”,justifyContent:“flex-start”}} onClick={openPwSheet}>
+<Ico n="lock"/><span style={{flex:1,textAlign:“left”}}>Wachtwoord wijzigen</span><Ico n="arrow"/>
+</button>
+</div>
+{!user.isPremium&&(
+<div style={{background:“linear-gradient(135deg,#1a1200,#0a0800)”,border:`1px solid #3a2800`,borderRadius:18,padding:20,marginBottom:14}}>
+<div style={{display:“flex”,gap:12,marginBottom:14}}>
+<div style={{fontSize:36}}>👑</div>
+<div><p style={{fontWeight:800,fontSize:18}}>Upgrade naar Premium</p><p style={{fontSize:13,color:G.muted,marginTop:2}}>Slechts €10 per jaar</p></div>
+</div>
+{[“Switch Strategy jaarplanner”,“Binge Calculator koppeling”,“Slimme verlengingsalerts”,“Bespaarteller”].map(f=>(
+<div key={f} style={{display:“flex”,gap:10,alignItems:“center”,marginBottom:8}}>
+<span style={{color:G.accent,flexShrink:0}}><Ico n="check"/></span>
+<p style={{fontSize:14,color:G.muted}}>{f}</p>
+</div>
+))}
+<button className=“btn bprem” style={{width:“100%”,padding:“14px”,marginTop:10}} onClick={upgradePremium}><Ico n="crown"/> Nu upgraden</button>
+</div>
+)}
+<div className="card" style={{marginBottom:14}}>
+<div style={{padding:16}}>
+<p style={{fontSize:11,color:G.muted,fontWeight:700,textTransform:“uppercase”,letterSpacing:“1px”,marginBottom:14}}>Voorkeuren</p>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”}}>
+<div>
+<p style={{fontWeight:600}}>Meldingen {!user.isPremium&&<span className="tag tp" style={{marginLeft:6}}>Premium</span>}</p>
+<p style={{fontSize:12,color:G.muted}}>Push bij bijna verlopen</p>
+</div>
+<Toggle value={notifs} onChange={v=>{setNotifs(v);LS.set(“ss_notifs”,v);}} disabled={!user.isPremium}/>
+</div>
+</div>
+</div>
+<button className=“btn bg” style={{width:“100%”,padding:“14px”,color:G.danger}} onClick={()=>{setUser(null);LS.set(“ss_user”,null);}}>Uitloggen</button>
+<p style={{textAlign:“center”,fontSize:11,color:G.muted,marginTop:14}}>StreamSwitch v2.0</p>
+</div>
+);
+}
+
+// ─── SUBS SHEET ───────────────────────────────────────────────────────────────
+
+function SubSheet({ editingSub, subForm, setSubForm, saveSub, onClose }) {
+const upd = (k,v) => setSubForm(f=>({…f,[k]:v}));
+return (
+<div className=“ov” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="sh">
+<div className="hndl"/>
+<h3 style={{fontWeight:800,fontSize:18,marginBottom:18}}>{editingSub?“Bewerken”:“Toevoegen”}</h3>
+{!editingSub&&(
+<div style={{marginBottom:18}}>
+<p style={{fontSize:12,color:G.muted,fontWeight:600,marginBottom:10}}>Kies een dienst</p>
+<div style={{display:“flex”,flexWrap:“wrap”,gap:8}}>
+{SERVICES.map(p=>(
+<button key={p.id} className=“btn bsm” onClick={()=>upd(“serviceId”,p.id)||setSubForm(f=>({…f,serviceId:p.id,name:p.name,price:String(p.price),color:p.color,icon:p.icon,url:p.url}))}
+style={{background:subForm.serviceId===p.id?p.color:G.border,color:subForm.serviceId===p.id?“white”:G.text}}>{p.icon} {p.name}</button>
+))}
+</div>
+</div>
+)}
+<div style={{display:“flex”,flexDirection:“column”,gap:13}}>
+<div><label className="lbl">Naam</label><input className=“inp” placeholder=“Netflix” value={subForm.name} onChange={e=>upd(“name”,e.target.value)}/></div>
+<div><label className="lbl">Maandprijs (€)</label><input className=“inp” type=“text” inputMode=“decimal” placeholder=“17.99” value={subForm.price} onChange={e=>upd(“price”,e.target.value)}/></div>
+<div><label className="lbl">Verlengdatum</label><input className=“inp” type=“date” value={subForm.renewalDate} onChange={e=>upd(“renewalDate”,e.target.value)}/></div>
+<div style={{display:“flex”,alignItems:“center”,justifyContent:“space-between”,padding:“12px 14px”,background:G.surface,borderRadius:11,border:`1px solid ${G.border}`}}>
+<p style={{fontWeight:600}}>Auto-verlengen</p>
+<Toggle value={subForm.autoRenew} onChange={v=>upd(“autoRenew”,v)}/>
+</div>
+<button className=“btn bp” style={{width:“100%”,padding:“14px”}} onClick={saveSub}>{editingSub?“Opslaan”:“Toevoegen”}</button>
+<button className=“btn bg” style={{width:“100%”}} onClick={onClose}>Annuleren</button>
+</div>
+</div>
+</div>
+);
+}
+
+// ─── WACHTWOORD SHEET ─────────────────────────────────────────────────────────
+
+function PwSheet({ user, setUser, onClose }) {
+const [form,setForm]=useState({current:””,next:””,confirm:””});
+const [err,setErr]=useState(””);
+const [ok,setOk]=useState(false);
+const [show,setShow]=useState({current:false,next:false,confirm:false});
+const save=()=>{
+setErr(””);
+if(!form.current||!form.next||!form.confirm){setErr(“Vul alle velden in.”);return;}
+if(form.current!==user.password){setErr(“Huidig wachtwoord klopt niet.”);return;}
+if(form.next.length<6){setErr(“Minimaal 6 tekens.”);return;}
+if(form.next!==form.confirm){setErr(“Wachtwoorden komen niet overeen.”);return;}
+setUser(u=>{const n={…u,password:form.next};LS.set(“ss_user”,n);return n;});
+setOk(true); setTimeout(()=>onClose(),1600);
+};
+return (
+<div className=“ov” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="sh">
+<div className="hndl"/>
+<h3 style={{fontWeight:800,fontSize:18,marginBottom:20}}>Wachtwoord wijzigen</h3>
+{ok?<div style={{textAlign:“center”,padding:“30px 0”}}><p style={{fontSize:52,marginBottom:12}}>✅</p><p style={{fontWeight:700,color:G.accent,fontSize:18}}>Wachtwoord gewijzigd!</p></div>:(
+<div style={{display:“flex”,flexDirection:“column”,gap:13}}>
+{[{k:“current”,l:“Huidig wachtwoord”,p:”••••••••”,a:“current-password”},{k:“next”,l:“Nieuw wachtwoord”,p:“Minimaal 6 tekens”,a:“new-password”},{k:“confirm”,l:“Bevestigen”,p:“Herhaal wachtwoord”,a:“new-password”}].map(({k,l,p,a})=>(
+<div key={k}><label className="lbl">{l}</label>
+<div className="iw">
+<input className=“inp” type={show[k]?“text”:“password”} placeholder={p} autoComplete={a} value={form[k]} onChange={e=>setForm(f=>({…f,[k]:e.target.value}))}/>
+<button className=“eyeb” onClick={()=>setShow(v=>({…v,[k]:!v[k]}))} tabIndex={-1}><Ico n={show[k]?“eyeoff”:“eye”}/></button>
+</div>
+</div>
+))}
+{err&&<p style={{color:G.danger,fontSize:13,background:”#2a1020”,padding:“10px 14px”,borderRadius:10}}>{err}</p>}
+<button className=“btn bp” style={{width:“100%”,padding:“14px”}} onClick={save}>Opslaan</button>
+<button className=“btn bg” style={{width:“100%”}} onClick={onClose}>Annuleren</button>
+</div>
+)}
+</div>
+</div>
+);
+}
+
+// ─── MAIN APP ─────────────────────────────────────────────────────────────────
+
+function StreamSwitch() {
+const [user,        setUser]        = useState(()=>LS.get(“ss_user”,null));
+const [authMode,    setAuthMode]    = useState(“login”);
+const [authEmail,   setAuthEmail]   = useState(””);
+const [authPass,    setAuthPass]    = useState(””);
+const [authError,   setAuthError]   = useState(””);
+const [showAuthPass,setShowAuthPass]= useState(false);
+const [tab,         setTab]         = useState(“dashboard”);
+const [subs,        setSubs]        = useState(()=>LS.get(“ss_subs”,DEF_SUBS));
+const [showSubSheet,setShowSubSheet]= useState(false);
+const [editingSub,  setEditingSub]  = useState(null);
+const [subForm,     setSubForm]     = useState({serviceId:””,name:””,price:””,renewalDate:addDays(30),autoRenew:true,color:”#00e5a0”,icon:“📺”,url:””});
+const [watchlist,   setWatchlist]   = useState(()=>LS.get(“ss_watchlist”,DEF_WL));
+const [strategy,    setStrategy]    = useState(null);
+const [notifs,      setNotifs]      = useState(()=>LS.get(“ss_notifs”,true));
+const [showPwSheet, setShowPwSheet] = useState(false);
+
+const totalMonthly = useMemo(()=>subs.reduce((s,a)=>s+a.price,0),[subs]);
+const savings      = useMemo(()=>calcSavings(subs,strategy?.plan),[subs,strategy]);
+
+const getStatus = (sub) => {
+const wlCount=watchlist.filter(w=>w.platform===sub.serviceId&&w.status!==“finished”).length;
+if(!sub.autoRenew) return {label:“Inactief”,cls:“ti”,dot:G.muted};
+if(daysLeft(sub.renewalDate)<=30&&wlCount===0) return {label:“Laag gebruik”,cls:“tl”,dot:G.warn};
+return {label:“Actief”,cls:“ta”,dot:G.accent};
+};
+
+const upgradePremium = ()=>setUser(u=>{const n={…u,isPremium:true};LS.set(“ss_user”,n);return n;});
+
+const handleAuth = ()=>{
+if(!authEmail.trim()||!authPass.trim()){setAuthError(“Vul alle velden in.”);return;}
+if(authPass.length<6){setAuthError(“Wachtwoord minimaal 6 tekens.”);return;}
+const u={id:genId(),email:authEmail,isPremium:false,password:authPass};
+setUser(u); LS.set(“ss_user”,u);
+};
+
+const openAddSub  = ()=>{setEditingSub(null);setSubForm({serviceId:””,name:””,price:””,renewalDate:addDays(30),autoRenew:true,color:”#00e5a0”,icon:“📺”,url:””});setShowSubSheet(true);};
+const openEditSub = (s)=>{setEditingSub(s);setSubForm({…s,price:String(s.price)});setShowSubSheet(true);};
+const saveSub = ()=>{
+if(!subForm.name.trim()||!subForm.price) return;
+const preset=SERVICES.find(p=>p.id===subForm.serviceId);
+const s={id:editingSub?.id||genId(),serviceId:subForm.serviceId,name:subForm.name,price:parseFloat(subForm.price.replace(”,”,”.”)),renewalDate:subForm.renewalDate,autoRenew:subForm.autoRenew,color:preset?.color||subForm.color,icon:preset?.icon||subForm.icon,url:preset?.url||subForm.url};
+setSubs(prev=>{const n=editingSub?prev.map(x=>x.id===editingSub.id?s:x):[…prev,s];LS.set(“ss_subs”,n);return n;});
+setShowSubSheet(false); setStrategy(null);
+};
+
+const NAV = [
+{id:“dashboard”,label:“Dashboard”,   icon:“dashboard”},
+{id:“subs”,     label:“Abonnementen”,icon:“subs”     },
+{id:“watchlist”,label:“Watchlist”,   icon:“list”     },
+{id:“news”,     label:“Nieuws”,      icon:“film”     },
+{id:“switch”,   label:“Switch”,      icon:“switch”   },
+];
+
+// Auth scherm
+if (!user) return (
+<div style={{minHeight:“100vh”,background:G.bg,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,padding:24}}>
+<style>{CSS}</style>
+<div style={{textAlign:“center”,marginBottom:36}}>
+<div style={{fontSize:52,marginBottom:10}}>📺</div>
+<h1 style={{fontSize:32,fontWeight:900,letterSpacing:”-1px”,color:G.text}}>Stream<span style={{color:G.accent}}>Switch</span></h1>
+<p style={{color:G.muted,marginTop:8,fontSize:15}}>Smart streaming. Smarter spending.</p>
+</div>
+<div style={{width:“100%”,maxWidth:360,display:“flex”,flexDirection:“column”,gap:12}}>
+<div style={{display:“flex”,background:G.surface,borderRadius:12,padding:4,border:`1px solid ${G.border}`}}>
+{[“login”,“register”].map(m=>(
+<button key={m} onClick={()=>setAuthMode(m)} style={{flex:1,padding:“9px”,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:14,borderRadius:9,background:authMode===m?G.card:“transparent”,color:authMode===m?G.text:G.muted}}>
+{m===“login”?“Inloggen”:“Registreren”}
+</button>
+))}
+</div>
+<input className=“inp” type=“email” placeholder=“E-mailadres” value={authEmail} onChange={e=>setAuthEmail(e.target.value)} autoComplete=“email”/>
+<div className="iw">
+<input className=“inp” type={showAuthPass?“text”:“password”} placeholder=“Wachtwoord” value={authPass} onChange={e=>setAuthPass(e.target.value)} onKeyDown={e=>e.key===“Enter”&&handleAuth()} autoComplete={authMode===“login”?“current-password”:“new-password”}/>
+<button className=“eyeb” onClick={()=>setShowAuthPass(v=>!v)} tabIndex={-1}><Ico n={showAuthPass?“eyeoff”:“eye”}/></button>
+</div>
+{authError&&<p style={{color:G.danger,fontSize:13}}>{authError}</p>}
+<button className=“btn bp” style={{width:“100%”,padding:“14px”}} onClick={handleAuth}>{authMode===“login”?“Inloggen”:“Account aanmaken”}</button>
+<p style={{textAlign:“center”,fontSize:12,color:G.muted}}>Probeer gratis — geen creditcard nodig</p>
+</div>
+</div>
+);
+
+return (
+<div className="ss">
+<style>{CSS}</style>
+{tab===“dashboard” && <Dashboard user={user} subs={subs} watchlist={watchlist} savings={savings} totalMonthly={totalMonthly} getStatus={getStatus} setSubs={setSubs} setTab={setTab} upgradePremium={upgradePremium}/>}
+{tab===“subs”      && <SubsScreen subs={subs} setSubs={setSubs} watchlist={watchlist} savings={savings} totalMonthly={totalMonthly} getStatus={getStatus} openAddSub={openAddSub} openEditSub={openEditSub}/>}
+{tab===“watchlist” && <WatchScreen watchlist={watchlist} setWatchlist={setWatchlist}/>}
+{tab===“news”      && <NewsScreen  watchlist={watchlist} setWatchlist={setWatchlist} subs={subs}/>}
+{tab===“switch”    && <SwitchScreen user={user} subs={subs} watchlist={watchlist} savings={savings} strategy={strategy} setStrategy={setStrategy} upgradePremium={upgradePremium}/>}
+{tab===“settings”  && <SettingsScreen user={user} setUser={setUser} notifs={notifs} setNotifs={setNotifs} upgradePremium={upgradePremium} openPwSheet={()=>setShowPwSheet(true)}/>}
+
+```
+  <nav className="nav">
+    {NAV.map(({id,label,icon})=>(
+      <button key={id} className={`nb${tab===id?" on":""}`} onClick={()=>setTab(id)}>
+        <Ico n={icon} size={22}/><span>{label}</span>
+      </button>
+    ))}
+  </nav>
+
+  {showSubSheet && <SubSheet editingSub={editingSub} subForm={subForm} setSubForm={setSubForm} saveSub={saveSub} onClose={()=>setShowSubSheet(false)}/>}
+  {showPwSheet  && <PwSheet  user={user} setUser={setUser} onClose={()=>setShowPwSheet(false)}/>}
+</div>
+```
+
+);
+}
+
+const root = ReactDOM.createRoot(document.getElementById(“root”));
+root.render(<StreamSwitch/>);
+</script>
+
 </body>
 </html>
