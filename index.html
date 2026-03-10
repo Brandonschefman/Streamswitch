@@ -134,9 +134,9 @@ const DEF_SUBS = [
   { id: "s2", serviceId: "disney", name: "Disney+", price: 13.99, color: "#113CCF", icon: "\u{1F3F0}", url: "https://disneyplus.com", renewalDate: addDays(18), autoRenew: true }
 ];
 const DEF_WL = [
-  { id: "w1", title: "The Bear", platform: "disney", type: "seriess", episodes: 18, epDuration: 45, seasons: 2, status: "watching", evenings: 3 },
+  { id: "w1", title: "The Bear", platform: "disney", type: "series", episodes: 18, epDuration: 45, seasons: 2, status: "watching", evenings: 3 },
   { id: "w2", title: "Oppenheimer", platform: "prime", type: "movie", episodes: 1, epDuration: 180, seasons: 1, status: "not_started", evenings: 3 },
-  { id: "w3", title: "Succession", platform: "hbo", type: "seriess", episodes: 39, epDuration: 60, seasons: 4, status: "finished", evenings: 3 }
+  { id: "w3", title: "Succession", platform: "hbo", type: "series", episodes: 39, epDuration: 60, seasons: 4, status: "finished", evenings: 3 }
 ];
 const IC = {
   dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>`,
@@ -274,7 +274,7 @@ function BingeCalc({ episodes, epDuration, setEpDuration, evenings, setEvenings,
 }
 function WatchCard({ item, onEdit, onDelete, onToggleWatched }) {
   const service = svc(item.platform);
-  const binge = item.type === "seriess" ? calcBinge(item.episodes, item.epDuration || 45, item.evenings || 3) : null;
+  const binge = item.type === "series" ? calcBinge(item.episodes, item.epDuration || 45, item.evenings || 3) : null;
   const watched = item.status === "finished";
   const watching = item.status === "watching";
   return /* @__PURE__ */ React.createElement("div", { className: "card", style: { marginBottom: 10, padding: 16, opacity: watched ? 0.55 : 1 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "flex-start", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 48, height: 48, borderRadius: 12, background: service.color + "22", border: `2px solid ${service.color}40`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0, cursor: "pointer" }, onClick: (e) => { e.stopPropagation(); openApp(service.url, service.deepLink); } }, service.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, fontSize: 15, textDecoration: watched ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, item.title), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", marginTop: 5 } }, /* @__PURE__ */ React.createElement("span", { className: "tag ti", style: { fontSize: 10 } }, service.name), /* @__PURE__ */ React.createElement("span", { className: "tag ti", style: { fontSize: 10 } }, item.type === "movie" ? "\u{1F3AC} Movie" : "\u{1F4FA} Series"), watching && /* @__PURE__ */ React.createElement("span", { className: "tag tl", style: { fontSize: 10 } }, "\u25B6 Bezig"), watched && /* @__PURE__ */ React.createElement("span", { className: "tag ta", style: { fontSize: 10 } }, "\u2713 Klaar"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", onClick: () => onEdit(item) }, /* @__PURE__ */ React.createElement(Ico, { n: "edit" })), /* @__PURE__ */ React.createElement("button", { className: "ib ib-del", onClick: () => onDelete(item.id) }, /* @__PURE__ */ React.createElement(Ico, { n: "trash" })))), binge && !watched && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 10, padding: "10px 12px", background: G.surface, borderRadius: 12, border: `1px solid ${G.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 4 } }, /* @__PURE__ */ React.createElement(Ico, { n: "clock", size: 12 }), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted } }, "Geschatte kijktijd")), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, fontWeight: 700, color: G.accent } }, binge.weeks, " weken \xB7 ", binge.months, " maand", binge.months !== 1 ? "en" : "", " ", service.name), binge.months > 1 && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted, marginTop: 2 } }, "\u{1F4A1} Plan ", binge.months, " opeenvolgende maanden ", service.name)), !watched && /* @__PURE__ */ React.createElement(
@@ -291,7 +291,7 @@ function WatchSheet({ item, onSave, onClose }) {
   const [form, setForm] = useState(item || {
     title: "",
     platform: "netflix",
-    type: "seriess",
+    type: "series",
     episodes: 10,
     epDuration: 45,
     seasons: 1,
@@ -299,8 +299,8 @@ function WatchSheet({ item, onSave, onClose }) {
     evenings: 3
   });
   const upd = (k, v) => setForm((f) => __spreadProps(__spreadValues({}, f), { [k]: v }));
-  const binge = form.type === "seriess" ? calcBinge((form.episodes || 0) * (form.seasons || 1), form.epDuration, form.evenings) : null;
-  return /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && onClose() }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { className: "hndl" }), /* @__PURE__ */ React.createElement("h3", { style: { fontWeight: 800, fontSize: 18, marginBottom: 18 } }, item ? "Edit" : "Add"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 13 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Titel"), /* @__PURE__ */ React.createElement("input", { className: "inp", placeholder: "E.g. The Bear", value: form.title, onChange: (e) => upd("title", e.target.value) })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Streamingdienst"), /* @__PURE__ */ React.createElement("select", { className: "inp", value: form.platform, onChange: (e) => upd("platform", e.target.value) }, SERVICES.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.icon, " ", s.name)))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Type"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [{ v: "seriess", l: "\u{1F4FA} Series" }, { v: "movie", l: "\u{1F3AC} Movie" }].map(({ v, l }) => /* @__PURE__ */ React.createElement(
+  const binge = form.type === "series" ? calcBinge((form.episodes || 0) * (form.seasons || 1), form.epDuration, form.evenings) : null;
+  return /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && onClose() }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { className: "hndl" }), /* @__PURE__ */ React.createElement("h3", { style: { fontWeight: 800, fontSize: 18, marginBottom: 18 } }, item ? "Edit" : "Add"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 13 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Titel"), /* @__PURE__ */ React.createElement("input", { className: "inp", placeholder: "E.g. The Bear", value: form.title, onChange: (e) => upd("title", e.target.value) })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Streamingdienst"), /* @__PURE__ */ React.createElement("select", { className: "inp", value: form.platform, onChange: (e) => upd("platform", e.target.value) }, SERVICES.map((s) => /* @__PURE__ */ React.createElement("option", { key: s.id, value: s.id }, s.icon, " ", s.name)))), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Type"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, [{ v: "series", l: "\u{1F4FA} Series" }, { v: "movie", l: "\u{1F3AC} Movie" }].map(({ v, l }) => /* @__PURE__ */ React.createElement(
     "button",
     {
       key: v,
@@ -309,7 +309,7 @@ function WatchSheet({ item, onSave, onClose }) {
       onClick: () => upd("type", v)
     },
     l
-  )))), form.type === "seriess" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Afleveringen"), /* @__PURE__ */ React.createElement(
+  )))), form.type === "series" && /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Afleveringen"), /* @__PURE__ */ React.createElement(
     "input",
     {
       className: "inp",
@@ -332,7 +332,7 @@ function WatchSheet({ item, onSave, onClose }) {
   ))), /* @__PURE__ */ React.createElement(
     BingeCalc,
     {
-      episodes: form.episodes,
+      episodes: (form.episodes || 0) * (form.seasons || 1),
       epDuration: form.epDuration,
       setEpDuration: (v) => upd("epDuration", v),
       evenings: form.evenings,
@@ -419,11 +419,14 @@ function Dashboard({ user, subs, watchlist, savings, totalMonthly, getStatus, se
   const warnings = subs.filter((s) => daysLeft(s.renewalDate) <= 7);
   const activeWL = watchlist.filter((w) => w.status !== "finished");
   const totalBingeMonths = activeWL.reduce((sum, item) => {
-    if (item.type !== "seriess") return sum;
+    if (item.type !== "series") return sum;
     const b = calcBinge(item.episodes, item.epDuration || 45, item.evenings || 3);
     return sum + ((b == null ? void 0 : b.months) || 0);
   }, 0);
-  return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: G.muted } }, "Welcome back \u{1F44B}"), /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, user.email.split("@")[0])), user.isPremium ? /* @__PURE__ */ React.createElement("span", { className: "tag tp" }, /* @__PURE__ */ React.createElement(Ico, { n: "crown", size: 13 }), " Premium") : /* @__PURE__ */ React.createElement("button", { className: "btn bg bsm", style: { color: G.premium, background: "#2a2000" }, onClick: () => setTab("settings") }, "\u2728 Upgrade")), warnings.map((sub) => {
+  return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: G.muted } }, "Welcome back \u{1F44B}"), /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, user.email.split("@")[0])), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8 } },
+      user.isPremium ? /* @__PURE__ */ React.createElement("span", { className: "tag tp" }, /* @__PURE__ */ React.createElement(Ico, { n: "crown", size: 13 }), " Premium") : /* @__PURE__ */ React.createElement("button", { className: "btn bg bsm", style: { color: G.premium, background: "#2a2000" }, onClick: () => setTab("settings") }, "\u2728 Upgrade"),
+      /* @__PURE__ */ React.createElement("button", { className: "ib", onClick: () => setTab("settings"), title: "Settings", style: { fontSize: 18 } }, "\u2699\uFE0F")
+    )), warnings.map((sub) => {
     const days = daysLeft(sub.renewalDate);
     const st = getStatus(sub);
     const urgent = days <= 5 && st.label === "Low usage";
@@ -543,7 +546,7 @@ function NewsScreen({ watchlist, setWatchlist, subs }) {
       id: genId(),
       title,
       platform,
-      type: type === "movie" ? "movie" : "seriess",
+      type: type === "movie" ? "movie" : "series",
       episodes,
       seasons,
       epDuration,
@@ -561,7 +564,7 @@ function NewsScreen({ watchlist, setWatchlist, subs }) {
   };
   const isAdded = (item) => added[item.id] || wlTitles.has((item.title || item.name || "").toLowerCase());
   const myProvs = TMDB_PROV.filter((p) => subs.some((s) => s.serviceId === p.serviceId)).map((p) => __spreadValues(__spreadValues({}, p), SERVICES.find((s) => s.id === p.serviceId)));
-  return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 14px" } }, /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, "Nieuws"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: G.muted, marginTop: 2 } }, "Nieuwe movies & seriess op jouw diensten")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", background: G.surface, borderRadius: 12, padding: 4, border: `1px solid ${G.border}`, marginBottom: 12 } }, [{ v: "movie", l: "\u{1F3AC} Movies" }, { v: "tv", l: "\u{1F4FA} Series" }].map(({ v, l }) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => handleType(v), style: { flex: 1, padding: "9px", border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 14, borderRadius: 9, background: type === v ? G.card : "transparent", color: type === v ? G.text : G.muted } }, l))), /* @__PURE__ */ React.createElement("div", { className: "mrow", style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => handleFilter("all"), style: { flexShrink: 0, padding: "7px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 12, background: filter === "all" ? G.accent : G.border, color: filter === "all" ? "#08080f" : G.text } }, "Alles"), myProvs.map((p) => /* @__PURE__ */ React.createElement("button", { key: p.serviceId, onClick: () => handleFilter(p.serviceId), style: { flexShrink: 0, padding: "7px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 12, background: filter === p.serviceId ? p.color : G.border, color: filter === p.serviceId ? "white" : G.text } }, p.icon, " ", p.name))), loading && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "60px 0", color: G.muted } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 40, marginBottom: 12 } }, "\u23F3"), /* @__PURE__ */ React.createElement("p", null, "Laden...")), error && /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 20, textAlign: "center", color: G.danger } }, /* @__PURE__ */ React.createElement("p", null, error), /* @__PURE__ */ React.createElement("button", { className: "btn bg", style: { marginTop: 12 }, onClick: () => handleFilter(filter) }, "Opnieuw")), !loading && !error && /* @__PURE__ */ React.createElement("div", { className: "pgrid" }, items.map((item) => {
+  return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 14px" } }, /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, "Nieuws"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: G.muted, marginTop: 2 } }, "Nieuwe movies & series op jouw diensten")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", background: G.surface, borderRadius: 12, padding: 4, border: `1px solid ${G.border}`, marginBottom: 12 } }, [{ v: "movie", l: "\u{1F3AC} Movies" }, { v: "tv", l: "\u{1F4FA} Series" }].map(({ v, l }) => /* @__PURE__ */ React.createElement("button", { key: v, onClick: () => handleType(v), style: { flex: 1, padding: "9px", border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 14, borderRadius: 9, background: type === v ? G.card : "transparent", color: type === v ? G.text : G.muted } }, l))), /* @__PURE__ */ React.createElement("div", { className: "mrow", style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("button", { onClick: () => handleFilter("all"), style: { flexShrink: 0, padding: "7px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 12, background: filter === "all" ? G.accent : G.border, color: filter === "all" ? "#08080f" : G.text } }, "Alles"), myProvs.map((p) => /* @__PURE__ */ React.createElement("button", { key: p.serviceId, onClick: () => handleFilter(p.serviceId), style: { flexShrink: 0, padding: "7px 14px", borderRadius: 20, border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 12, background: filter === p.serviceId ? p.color : G.border, color: filter === p.serviceId ? "white" : G.text } }, p.icon, " ", p.name))), loading && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "60px 0", color: G.muted } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 40, marginBottom: 12 } }, "\u23F3"), /* @__PURE__ */ React.createElement("p", null, "Laden...")), error && /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 20, textAlign: "center", color: G.danger } }, /* @__PURE__ */ React.createElement("p", null, error), /* @__PURE__ */ React.createElement("button", { className: "btn bg", style: { marginTop: 12 }, onClick: () => handleFilter(filter) }, "Opnieuw")), !loading && !error && /* @__PURE__ */ React.createElement("div", { className: "pgrid" }, items.map((item) => {
     const title = item.title || item.name || "Onbekend";
     const poster = item.poster_path ? `${TMDB_IMG}${item.poster_path}` : null;
     const rating = item.vote_average ? item.vote_average.toFixed(1) : "?";
@@ -587,7 +590,7 @@ function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, u
     const platformMonths = {};
     watchlist.filter((w) => w.status !== "finished").forEach((w) => {
       if (!platformMonths[w.platform]) platformMonths[w.platform] = 0;
-      if (w.type === "seriess") {
+      if (w.type === "series") {
         const b = calcBinge(w.episodes, w.epDuration || 45, w.evenings || 3);
         platformMonths[w.platform] += (b == null ? void 0 : b.months) || 1;
       } else {
@@ -633,7 +636,7 @@ function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, u
   const wlItems = watchlist.filter((w) => w.status !== "finished");
   const byPlatform = SERVICES.map((s) => __spreadProps(__spreadValues({}, s), {
     items: wlItems.filter((w) => w.platform === s.id),
-    totalMonths: wlItems.filter((w) => w.platform === s.id && w.type === "seriess").reduce((sum, w) => {
+    totalMonths: wlItems.filter((w) => w.platform === s.id && w.type === "series").reduce((sum, w) => {
       const b = calcBinge(w.episodes, w.epDuration || 45, w.evenings || 3);
       return sum + ((b == null ? void 0 : b.months) || 0);
     }, 0)
