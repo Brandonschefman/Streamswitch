@@ -11,7 +11,7 @@
   <title>StreamSwitch</title>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -73,7 +73,17 @@
 
 </head>
 <body>
-<div id="root"></div>
+<div id="root">
+  <div id="loading" style="min-height:100vh;background:#08080f;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;font-family:sans-serif">
+    <div style="font-size:52px">📺</div>
+    <div style="color:#00e5a0;font-size:20px;font-weight:700">StreamSwitch</div>
+    <div style="color:#5a5a7a;font-size:14px">App laden...</div>
+    <div style="width:40px;height:4px;background:#1e1e2e;border-radius:2px;overflow:hidden;margin-top:8px">
+      <div style="width:40%;height:100%;background:#00e5a0;border-radius:2px;animation:sl 1.2s ease-in-out infinite"></div>
+    </div>
+    <style>@keyframes sl{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}</style>
+  </div>
+</div>
 <script type="text/babel" data-presets="react">
 const { useState, useMemo, useEffect, useCallback } = React;
 
@@ -1194,6 +1204,8 @@ return (
 );
 }
 
+const loadEl = document.getElementById(“loading”);
+if (loadEl) loadEl.style.display = “none”;
 const root = ReactDOM.createRoot(document.getElementById(“root”));
 root.render(<StreamSwitch/>);
 </script>
