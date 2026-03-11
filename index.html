@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-title" content="StreamSwitch" />
   <title>StreamSwitch</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
+  <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #08080f; color: #f0f0f8; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
   </style>
@@ -39,602 +39,550 @@ var __spreadValues = (a, b) => {
   return a;
 };
 var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
-const { useState, useMemo, useEffect, useCallback } = React;
+
+const { useState, useMemo, useEffect } = React;
+
 const SERVICES = [
-  { id: "netflix", name: "Netflix", price: 17.99, color: "#E50914", icon: "\u{1F3AC}", url: "https://netflix.com", deepLink: "netflix://" },
-  { id: "prime", name: "Prime Video", price: 8.99, color: "#00A8E0", icon: "\u{1F4E6}", url: "https://primevideo.com", deepLink: "aiv://" },
-  { id: "disney", name: "Disney+", price: 13.99, color: "#113CCF", icon: "\u{1F3F0}", url: "https://disneyplus.com", deepLink: "disneyplus://" },
-  { id: "hbo", name: "HBO Max", price: 15.99, color: "#7B2FBE", icon: "\u{1F451}", url: "https://play.max.com", deepLink: "max://" },
-  { id: "apple", name: "Apple TV+", price: 9.99, color: "#888888", icon: "\u{1F34E}", url: "https://tv.apple.com", deepLink: "videos://" },
-  { id: "videoland", name: "Videoland", price: 7.99, color: "#FF6B00", icon: "\u{1F1F3}\u{1F1F1}", url: "https://www.videoland.com", deepLink: "videoland://" }
-];
-const TMDB_KEY = "8a6c1e23359e4993fe7f24755991788d";
-const TMDB_BASE = "https://api.themoviedb.org/3";
-const TMDB_IMG = "https://image.tmdb.org/t/p/w500";
-const TMDB_PROV = [
-  { tmdbId: 8, serviceId: "netflix" },
-  { tmdbId: 119, serviceId: "prime" },
-  { tmdbId: 337, serviceId: "disney" },
-  { tmdbId: 384, serviceId: "hbo" },
-  { tmdbId: 350, serviceId: "apple" },
-  { tmdbId: 39, serviceId: "videoland" }
+{ id: “netflix”,   name: “Netflix”,     price: 17.99, color: “#E50914”, icon: “🎬”, url: “https://netflix.com”,       deepLink: “netflix://” },
+{ id: “prime”,     name: “Prime Video”, price: 8.99,  color: “#00A8E0”, icon: “📦”, url: “https://primevideo.com”,    deepLink: “aiv://” },
+{ id: “disney”,    name: “Disney+”,     price: 13.99, color: “#113CCF”, icon: “🏰”, url: “https://disneyplus.com”,    deepLink: “disneyplus://” },
+{ id: “hbo”,       name: “HBO Max”,     price: 15.99, color: “#7B2FBE”, icon: “👑”, url: “https://play.max.com”,      deepLink: “max://” },
+{ id: “apple”,     name: “Apple TV+”,   price: 9.99,  color: “#888888”, icon: “🍎”, url: “https://tv.apple.com”,      deepLink: “videos://” },
+{ id: “videoland”, name: “Videoland”,   price: 7.99,  color: “#FF6B00”, icon: “🇳🇱”, url: “https://www.videoland.com”, deepLink: “videoland://” }
 ];
 
-// FIX 3: Start from current month instead of January
-const CURRENT_MONTH = new Date().getMonth(); // 0=Jan, 2=Mar, etc.
-const MONTHS = [“Jan”, “Feb”, “Mar”, “Apr”, “May”, “Jun”, “Jul”, “Aug”, “Sep”, “Oct”, “Nov”, “Dec”];
+const TMDB_KEY  = “8a6c1e23359e4993fe7f24755991788d”;
+const TMDB_BASE = “https://api.themoviedb.org/3”;
+const TMDB_IMG  = “https://image.tmdb.org/t/p/w500”;
+const TMDB_PROV = [
+{ tmdbId: 8,   serviceId: “netflix” },
+{ tmdbId: 119, serviceId: “prime” },
+{ tmdbId: 337, serviceId: “disney” },
+{ tmdbId: 384, serviceId: “hbo” },
+{ tmdbId: 350, serviceId: “apple” },
+{ tmdbId: 39,  serviceId: “videoland” }
+];
+
+// FIX 3: months array + current month constant
+const MONTHS      = [“Jan”,“Feb”,“Mar”,“Apr”,“May”,“Jun”,“Jul”,“Aug”,“Sep”,“Oct”,“Nov”,“Dec”];
+const NOW_MONTH   = new Date().getMonth(); // 0-11
 
 const G = {
-bg: “#08080f”,
-surface: “#101018”,
-card: “#14141f”,
-border: “#1e1e2e”,
-accent: “#00e5a0”,
-warn: “#ff6b35”,
-danger: “#ff3b5c”,
-text: “#f0f0f8”,
-muted: “#5a5a7a”,
-premium: “#f7c948”
-};
-const genId = () => Math.random().toString(36).slice(2, 9);
-const addDays = (n) => {
-const d = /* @**PURE** */ new Date();
-d.setDate(d.getDate() + n);
-return d.toISOString().split(“T”)[0];
-};
-const daysLeft = (s) => {
-if (!s) return 999;
-return Math.ceil((new Date(s) - /* @**PURE** */ new Date()) / 864e5);
-};
-const fmt = (n) => n != null ? `\u20AC${Number(n).toFixed(0)}` : “\u2014”;
-const svc = (id) => SERVICES.find((s) => s.id === id) || SERVICES[0];
-const LS = {
-get: (k, d) => {
-try {
-const v = localStorage.getItem(k);
-return v ? JSON.parse(v) : d;
-} catch (e) {
-return d;
-}
-},
-set: (k, v) => {
-try {
-localStorage.setItem(k, JSON.stringify(v));
-} catch (e) {
-}
-}
+bg: “#08080f”, surface: “#101018”, card: “#14141f”, border: “#1e1e2e”,
+accent: “#00e5a0”, warn: “#ff6b35”, danger: “#ff3b5c”,
+text: “#f0f0f8”, muted: “#5a5a7a”, premium: “#f7c948”
 };
 
-// FIX 1: Unified binge calculation - always uses total episodes directly
-// In WatchCard: episodes is already the total (item.episodes for movies, item.episodes*seasons for series stored at save time)
-// In WatchSheet: episodes * seasons gives total
+const genId  = () => Math.random().toString(36).slice(2,9);
+const addDays = (n) => { const d = new Date(); d.setDate(d.getDate()+n); return d.toISOString().split(“T”)[0]; };
+const daysLeft = (s) => { if (!s) return 999; return Math.ceil((new Date(s) - new Date()) / 864e5); };
+const fmt  = (n) => n != null ? `€${Number(n).toFixed(0)}` : “—”;
+const svc  = (id) => SERVICES.find(s => s.id === id) || SERVICES[0];
+
+const LS = {
+get: (k,d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+set: (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+
+// FIX 1: calcBinge always receives totalEpisodes (already multiplied)
 const calcBinge = (totalEpisodes, epDuration, eveningsPerWeek, minsPerEvening = 120) => {
 if (!totalEpisodes || totalEpisodes < 2) return null;
-const totalMins = totalEpisodes * epDuration;
+const totalMins  = totalEpisodes * epDuration;
 const minsPerWeek = eveningsPerWeek * minsPerEvening;
-const weeks = Math.ceil(totalMins / minsPerWeek);
+const weeks  = Math.ceil(totalMins / minsPerWeek);
 const months = Math.ceil(weeks / 4.3);
 return { totalMins, weeks, months };
 };
 
 const calcSavings = (subs, plan) => {
-const huidigJaar = subs.reduce((s, a) => s + a.price, 0) * 12;
-if (!(plan == null ? void 0 : plan.length)) return { huidigJaar, strategieJaar: null, besparing: null };
-const strategieJaar = plan.filter((m) => m.type === “active”).reduce((s, m) => s + m.price, 0);
+const huidigJaar = subs.reduce((s,a) => s + a.price, 0) * 12;
+if (!plan?.length) return { huidigJaar, strategieJaar: null, besparing: null };
+const strategieJaar = plan.filter(m => m.type === “active”).reduce((s,m) => s + m.price, 0);
 return { huidigJaar, strategieJaar, besparing: Math.max(0, huidigJaar - strategieJaar) };
 };
+
 const openApp = (url, deepLink) => {
 const isMobile = /iphone|ipad|ipod|android/i.test(navigator.userAgent);
 if (isMobile && deepLink) {
-const a = document.createElement(“a”);
-a.href = deepLink;
-a.style.display = “none”;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-const t = setTimeout(() => window.open(url, “_blank”), 1500);
+const a = document.createElement(“a”); a.href = deepLink; a.style.display = “none”;
+document.body.appendChild(a); a.click(); document.body.removeChild(a);
+const t = setTimeout(() => window.open(url,”_blank”), 1500);
 window.addEventListener(“blur”, () => clearTimeout(t), { once: true });
-} else {
-window.open(url, “_blank”);
-}
+} else { window.open(url,”_blank”); }
 };
+
 const DEF_SUBS = [
-{ id: “s1”, serviceId: “netflix”, name: “Netflix”, price: 17.99, color: “#E50914”, icon: “\u{1F3AC}”, url: “https://netflix.com”, renewalDate: addDays(4), autoRenew: true },
-{ id: “s2”, serviceId: “disney”, name: “Disney+”, price: 13.99, color: “#113CCF”, icon: “\u{1F3F0}”, url: “https://disneyplus.com”, renewalDate: addDays(18), autoRenew: true }
+{ id:“s1”, serviceId:“netflix”, name:“Netflix”, price:17.99, color:”#E50914”, icon:“🎬”, url:“https://netflix.com”, renewalDate:addDays(4),  autoRenew:true },
+{ id:“s2”, serviceId:“disney”,  name:“Disney+”, price:13.99, color:”#113CCF”, icon:“🏰”, url:“https://disneyplus.com”, renewalDate:addDays(18), autoRenew:true }
 ];
+
 const DEF_WL = [
-{ id: “w1”, title: “The Bear”, platform: “disney”, type: “series”, episodes: 9, epDuration: 45, seasons: 2, totalEpisodes: 18, status: “watching”, evenings: 3 },
-{ id: “w2”, title: “Oppenheimer”, platform: “prime”, type: “movie”, episodes: 1, epDuration: 180, seasons: 1, totalEpisodes: 1, status: “not_started”, evenings: 3 },
-{ id: “w3”, title: “Succession”, platform: “hbo”, type: “series”, episodes: 10, epDuration: 60, seasons: 4, totalEpisodes: 39, status: “finished”, evenings: 3 }
+{ id:“w1”, title:“The Bear”,    platform:“disney”, type:“series”, episodes:9,  epDuration:45,  seasons:2, totalEpisodes:18, status:“watching”,     evenings:3 },
+{ id:“w2”, title:“Oppenheimer”, platform:“prime”,  type:“movie”,  episodes:1,  epDuration:180, seasons:1, totalEpisodes:1,  status:“not_started”,  evenings:3 },
+{ id:“w3”, title:“Succession”,  platform:“hbo”,    type:“series”, episodes:10, epDuration:60,  seasons:4, totalEpisodes:39, status:“finished”,     evenings:3 }
 ];
+
 const IC = {
-dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>`,
-subs: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
-list: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>`,
-movie: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="2" y1="17" x2="7" y2="17"/></svg>`,
-switch: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
-settings: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
-trash: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4h6v2"/></svg>`,
-edit: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
-open: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
-crown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 20h18"/><path d="M5 20V10l7-6 7 6v10"/></svg>`,
-check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
-plus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
-lock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
-eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
-eyeoff: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
-arrow: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>`,
-star: `<svg viewBox="0 0 24 24" fill="#f7c948" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
-x: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
-clock: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
-zap: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
+dashboard:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>`,
+subs:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>`,
+list:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>`,
+movie:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="17" y1="7" x2="22" y2="7"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="2" y1="17" x2="7" y2="17"/></svg>`,
+switch:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+settings:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`,
+trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4h6v2"/></svg>`,
+edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+open:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+crown:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 20h18"/><path d="M5 20V10l7-6 7 6v10"/></svg>`,
+check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+plus:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+eye:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+eyeoff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+star:`<svg viewBox="0 0 24 24" fill="#f7c948" stroke="none"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`,
+x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+zap:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
 };
-const Ico = ({ n, size = 16 }) => {
-var _a;
-return /* @**PURE** */ React.createElement(
-“span”,
-{
-style: { display: “inline-flex”, alignItems: “center”, width: size, height: size, flexShrink: 0 },
-dangerouslySetInnerHTML: { __html: `<svg width="${size}" height="${size}" ${(_a = IC[n]) == null ? void 0 : _a.slice(4)}` }
-}
-);
+
+const Ico = ({ n, size=16 }) => {
+const svg = IC[n];
+if (!svg) return null;
+return React.createElement(“span”, {
+style: { display:“inline-flex”, alignItems:“center”, width:size, height:size, flexShrink:0 },
+dangerouslySetInnerHTML: { __html: `<svg width="${size}" height="${size}" ${svg.slice(4)}` }
+});
 };
-const Toggle = ({ value, onChange, disabled = false }) => /* @**PURE** */ React.createElement(
-“button”,
-{
+
+const Toggle = ({ value, onChange, disabled=false }) =>
+React.createElement(“button”, {
 onClick: () => !disabled && onChange(!value),
 style: {
-width: 46,
-height: 26,
-borderRadius: 13,
-border: “none”,
+width:46, height:26, borderRadius:13, border:“none”,
 cursor: disabled ? “not-allowed” : “pointer”,
 background: value && !disabled ? G.accent : G.border,
-transition: “background .18s”,
-position: “relative”,
-flexShrink: 0,
+transition:“background .18s”, position:“relative”, flexShrink:0,
 opacity: disabled ? 0.4 : 1
 }
 },
-/* @**PURE** */ React.createElement(“div”, { style: {
-width: 20,
-height: 20,
-borderRadius: “50%”,
-background: “white”,
-position: “absolute”,
-top: 3,
-left: value && !disabled ? 23 : 3,
-transition: “left .18s”
-} })
+React.createElement(“div”, { style:{
+width:20, height:20, borderRadius:“50%”, background:“white”,
+position:“absolute”, top:3, left: value && !disabled ? 23 : 3, transition:“left .18s”
+}})
 );
-const CSS = `::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e2e;border-radius:2px} .ss{max-width:900px;margin:0 auto;min-height:100vh} .scr{padding:0 16px 110px} .card{background:#14141f;border:1px solid #1e1e2e;border-radius:18px} .cardh{transition:border-color .2s,transform .15s;cursor:pointer} .cardh:hover{border-color:#2a2a42;transform:translateY(-1px)} .btn{font-family:'Outfit',sans-serif;font-weight:600;border:none;cursor:pointer;border-radius:12px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1} .btn:active{transform:scale(.96)} .bp{background:#00e5a0;color:#08080f;padding:13px 22px;font-size:15px} .bp:hover{filter:brightness(1.1)} .bg{background:#1e1e2e;color:#f0f0f8;padding:10px 18px;font-size:14px} .bg:hover{background:#2a2a42} .bd{background:#2a1020;color:#ff3b5c;padding:8px 14px;font-size:13px;border-radius:10px} .bprem{background:linear-gradient(135deg,#f7c948,#ff9500);color:#08080f;padding:13px 22px;font-size:15px} .bsm{padding:7px 12px!important;font-size:12px!important;border-radius:9px!important} .ib{background:#1e1e2e;color:#5a5a7a;border:none;cursor:pointer;border-radius:9px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s} .ib:hover{color:#f0f0f8;background:#2a2a42} .ib-del:hover{color:#ff3b5c;background:#2a1020} .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:900px;background:#101018;border-top:1px solid #1e1e2e;display:flex;z-index:200;padding:8px 0 env(safe-area-inset-bottom,20px)} .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;color:#5a5a7a;padding:8px 2px;transition:color .15s} .nb.on{color:#00e5a0} .inp{background:#101018;border:1px solid #1e1e2e;border-radius:11px;color:#f0f0f8;font-family:'Outfit',sans-serif;font-size:15px;padding:12px 14px;width:100%;outline:none;transition:border-color .18s;-webkit-appearance:none;appearance:none} .inp:focus{border-color:#00e5a0} .inp option{background:#101018;color:#f0f0f8} .iw{position:relative} .iw .inp{padding-right:44px} .eyeb{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#5a5a7a;display:flex;align-items:center;padding:4px} .lbl{font-size:12px;color:#5a5a7a;margin-bottom:5px;display:block;font-weight:500} .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600} .ta{background:#002a1a;color:#00e5a0} .tl{background:#2a1800;color:#ff6b35} .ti{background:#1a1a1a;color:#666} .tp{background:#2a2000;color:#f7c948} .ov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:flex-end;justify-content:center} .sh{background:#14141f;border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:20px 20px 100px;border-top:1px solid #1e1e2e;max-height:92vh;overflow-y:auto} .hndl{width:40px;height:4px;background:#1e1e2e;border-radius:2px;margin:0 auto 20px} .hero{background:linear-gradient(135deg,#002a1a,#001a10);border:1px solid #004a30;border-radius:20px;padding:24px;text-align:center} .heroamt{font-size:52px;font-weight:900;color:#00e5a0;letter-spacing:-2px;line-height:1} .mrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none} .mrow::-webkit-scrollbar{display:none} .chip{flex-shrink:0;border-radius:10px;padding:8px 12px;font-size:11px;font-weight:700;text-align:center;min-width:52px} .sep{height:1px;background:#1e1e2e;margin:14px 0} .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0} .binge-box{background:linear-gradient(135deg,#001a2a,#000a15);border:1px solid #003a5a;border-radius:14px;padding:14px 16px} .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px} @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}} .fu{animation:fu .3s ease forwards} input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:#1e1e2e;border-radius:2px;outline:none} input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#00e5a0;border-radius:50%;cursor:pointer} @media(min-width:600px){ .pgrid{grid-template-columns:1fr 1fr 1fr} .scr{padding:0 24px 110px} .card{border-radius:22px} } @media(min-width:768px){ .nb span{font-size:12px} .nb{padding:10px 4px} }`;
 
-// FIX 1: BingeCalc receives totalEpisodes (already multiplied) for display
+const CSS = `::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e2e;border-radius:2px} .ss{max-width:900px;margin:0 auto;min-height:100vh} .scr{padding:0 16px 110px} .card{background:#14141f;border:1px solid #1e1e2e;border-radius:18px} .cardh{transition:border-color .2s,transform .15s;cursor:pointer} .cardh:hover{border-color:#2a2a42;transform:translateY(-1px)} .btn{font-family:'Outfit',sans-serif;font-weight:600;border:none;cursor:pointer;border-radius:12px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1} .btn:active{transform:scale(.96)} .bp{background:#00e5a0;color:#08080f;padding:13px 22px;font-size:15px} .bp:hover{filter:brightness(1.1)} .bg{background:#1e1e2e;color:#f0f0f8;padding:10px 18px;font-size:14px} .bg:hover{background:#2a2a42} .bd{background:#2a1020;color:#ff3b5c;padding:8px 14px;font-size:13px;border-radius:10px} .bprem{background:linear-gradient(135deg,#f7c948,#ff9500);color:#08080f;padding:13px 22px;font-size:15px} .bsm{padding:7px 12px!important;font-size:12px!important;border-radius:9px!important} .ib{background:#1e1e2e;color:#5a5a7a;border:none;cursor:pointer;border-radius:9px;width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s} .ib:hover{color:#f0f0f8;background:#2a2a42} .ib-del:hover{color:#ff3b5c;background:#2a1020} .nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:900px;background:#101018;border-top:1px solid #1e1e2e;display:flex;z-index:200;padding:8px 0 env(safe-area-inset-bottom,20px)} .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;color:#5a5a7a;padding:8px 2px;transition:color .15s} .nb.on{color:#00e5a0} .inp{background:#101018;border:1px solid #1e1e2e;border-radius:11px;color:#f0f0f8;font-family:'Outfit',sans-serif;font-size:15px;padding:12px 14px;width:100%;outline:none;transition:border-color .18s;-webkit-appearance:none;appearance:none} .inp:focus{border-color:#00e5a0} .inp option{background:#101018;color:#f0f0f8} .iw{position:relative} .iw .inp{padding-right:44px} .eyeb{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#5a5a7a;display:flex;align-items:center;padding:4px} .lbl{font-size:12px;color:#5a5a7a;margin-bottom:5px;display:block;font-weight:500} .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600} .ta{background:#002a1a;color:#00e5a0} .tl{background:#2a1800;color:#ff6b35} .ti{background:#1a1a1a;color:#666} .tp{background:#2a2000;color:#f7c948} .ov{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:flex-end;justify-content:center} .sh{background:#14141f;border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:20px 20px 100px;border-top:1px solid #1e1e2e;max-height:92vh;overflow-y:auto} .hndl{width:40px;height:4px;background:#1e1e2e;border-radius:2px;margin:0 auto 20px} .hero{background:linear-gradient(135deg,#002a1a,#001a10);border:1px solid #004a30;border-radius:20px;padding:24px;text-align:center} .heroamt{font-size:52px;font-weight:900;color:#00e5a0;letter-spacing:-2px;line-height:1} .mrow{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none} .mrow::-webkit-scrollbar{display:none} .chip{flex-shrink:0;border-radius:10px;padding:8px 12px;font-size:11px;font-weight:700;text-align:center;min-width:52px} .sep{height:1px;background:#1e1e2e;margin:14px 0} .dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0} .binge-box{background:linear-gradient(135deg,#001a2a,#000a15);border:1px solid #003a5a;border-radius:14px;padding:14px 16px} .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px} @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}} .fu{animation:fu .3s ease forwards} input[type=range]{-webkit-appearance:none;width:100%;height:4px;background:#1e1e2e;border-radius:2px;outline:none} input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;background:#00e5a0;border-radius:50%;cursor:pointer} @media(min-width:600px){.pgrid{grid-template-columns:1fr 1fr 1fr}.scr{padding:0 24px 110px}.card{border-radius:22px}} @media(min-width:768px){.nb span{font-size:12px}.nb{padding:10px 4px}}`;
+
+// ─── BINGE CALC COMPONENT ────────────────────────────────────────────────────
+// FIX 1: receives totalEpisodes (already episodes * seasons)
 function BingeCalc({ totalEpisodes, epDuration, setEpDuration, evenings, setEvenings, result }) {
 if (!totalEpisodes || totalEpisodes < 2) return null;
-return /* @**PURE** */ React.createElement(“div”, { className: “binge-box”, style: { marginTop: 14 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 8, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(Ico, { n: “clock”, size: 16 }),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 14, color: G.accent } }, “Binge Calculator”)
+return React.createElement(“div”, { className:“binge-box”, style:{marginTop:14} },
+React.createElement(“div”, { style:{display:“flex”,alignItems:“center”,gap:8,marginBottom:12} },
+React.createElement(Ico, { n:“clock”, size:16 }),
+React.createElement(“p”, { style:{fontWeight:700,fontSize:14,color:G.accent} }, “Binge Calculator”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Episode duration”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8 } },
-[30, 45, 60].map((m) => /* @**PURE** */ React.createElement(
-“button”,
-{
-key: m,
-className: “btn bsm”,
+React.createElement(“div”, { style:{marginBottom:12} },
+React.createElement(“label”, { className:“lbl” }, “Episode duration”),
+React.createElement(“div”, { style:{display:“flex”,gap:8} },
+[30,45,60].map(m =>
+React.createElement(“button”, {
+key:m, className:“btn bsm”,
 onClick: () => setEpDuration(m),
-style: { flex: 1, background: epDuration === m ? G.accent : G.border, color: epDuration === m ? “#08080f” : G.text }
-},
-m, “ min”
-))
+style:{ flex:1, background: epDuration===m ? G.accent : G.border, color: epDuration===m ? “#08080f” : G.text }
+}, m+” min”)
+)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Evenings per week: “, /* @**PURE** */ React.createElement(“strong”, { style: { color: G.text } }, evenings)),
-/* @**PURE** */ React.createElement(“input”, { type: “range”, min: 1, max: 7, value: evenings, onChange: (e) => setEvenings(Number(e.target.value)) }),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, fontSize: 11, color: G.muted, marginTop: 4 } },
-/* @**PURE** */ React.createElement(“span”, null, “1 evening”),
-/* @**PURE** */ React.createElement(“span”, null, “7 evenings”)
+React.createElement(“div”, { style:{marginBottom:12} },
+React.createElement(“label”, { className:“lbl” }, “Evenings per week: “, React.createElement(“strong”, { style:{color:G.text} }, evenings)),
+React.createElement(“input”, { type:“range”, min:1, max:7, value:evenings, onChange: e => setEvenings(Number(e.target.value)) }),
+React.createElement(“div”, { style:{display:“flex”,justifyContent:“space-between”,fontSize:11,color:G.muted,marginTop:4} },
+React.createElement(“span”, null, “1 evening”),
+React.createElement(“span”, null, “7 evenings”)
 )
 ),
-result && /* @**PURE** */ React.createElement(“div”, { style: { background: “rgba(0,229,160,.08)”, border: “1px solid rgba(0,229,160,.2)”, borderRadius: 12, padding: 12, textAlign: “center” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: G.muted, marginBottom: 4 } },
-totalEpisodes, “ eps \xD7 “, epDuration, “ min = “,
-/* @**PURE** */ React.createElement(“strong”, { style: { color: G.text } }, Math.round(result.totalMins / 60), “h “, result.totalMins % 60, “m”), “ total”
+result && React.createElement(“div”, { style:{background:“rgba(0,229,160,.08)”,border:“1px solid rgba(0,229,160,.2)”,borderRadius:12,padding:12,textAlign:“center”} },
+React.createElement(“p”, { style:{fontSize:13,color:G.muted,marginBottom:4} },
+totalEpisodes+” eps × “+epDuration+” min = “,
+React.createElement(“strong”, { style:{color:G.text} }, Math.round(result.totalMins/60)+“h “+result.totalMins%60+“m”),
+“ total”
 ),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 16, fontWeight: 800, color: G.accent } },
-“\u2248 “, result.weeks, “ “, result.weeks === 1 ? “week” : “weeks”, “ to finish”
+React.createElement(“p”, { style:{fontSize:16,fontWeight:800,color:G.accent} },
+“≈ “+result.weeks+” “+(result.weeks===1?“week”:“weeks”)+” to finish”
 ),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginTop: 4 } },
-“\u2192 Recommended: “,
-/* @**PURE** */ React.createElement(“strong”, { style: { color: G.text } }, result.months, “ month”, result.months !== 1 ? “s” : “”), “ subscription”
+React.createElement(“p”, { style:{fontSize:12,color:G.muted,marginTop:4} },
+“→ Recommended: “,
+React.createElement(“strong”, { style:{color:G.text} }, result.months+” month”+(result.months!==1?“s”:””)+” subscription”)
 )
 )
 );
 }
 
+// ─── WATCH CARD ───────────────────────────────────────────────────────────────
 function WatchCard({ item, onEdit, onDelete, onToggleWatched }) {
 const service = svc(item.platform);
-// FIX 1: Use totalEpisodes if stored, otherwise fall back to episodes*seasons
-const totalEps = item.totalEpisodes || (item.type === “series” ? (item.episodes || 0) * (item.seasons || 1) : 1);
-const binge = item.type === “series” ? calcBinge(totalEps, item.epDuration || 45, item.evenings || 3) : null;
-const watched = item.status === “finished”;
+// FIX 1: use stored totalEpisodes, fallback to episodes*seasons for old data
+const totalEps = item.totalEpisodes != null
+? item.totalEpisodes
+: (item.type === “series” ? (item.episodes||0)*(item.seasons||1) : 1);
+const binge   = item.type === “series” ? calcBinge(totalEps, item.epDuration||45, item.evenings||3) : null;
+const watched  = item.status === “finished”;
 const watching = item.status === “watching”;
-return /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 10, padding: 16, opacity: watched ? 0.55 : 1 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “flex-start”, gap: 12 } },
-/* @**PURE** */ React.createElement(“div”, {
-style: { width: 48, height: 48, borderRadius: 12, background: service.color + “22”, border: `2px solid ${service.color}40`, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 24, flexShrink: 0, cursor: “pointer” },
-onClick: (e) => { e.stopPropagation(); openApp(service.url, service.deepLink); }
+return React.createElement(“div”, { className:“card”, style:{marginBottom:10,padding:16,opacity:watched?0.55:1} },
+React.createElement(“div”, { style:{display:“flex”,alignItems:“flex-start”,gap:12} },
+React.createElement(“div”, {
+style:{width:48,height:48,borderRadius:12,background:service.color+“22”,border:`2px solid ${service.color}40`,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:24,flexShrink:0,cursor:“pointer”},
+onClick: e => { e.stopPropagation(); openApp(service.url, service.deepLink); }
 }, service.icon),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1, minWidth: 0 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15, textDecoration: watched ? “line-through” : “none”, overflow: “hidden”, textOverflow: “ellipsis”, whiteSpace: “nowrap” } }, item.title),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 6, flexWrap: “wrap”, marginTop: 5 } },
-/* @**PURE** */ React.createElement(“span”, { className: “tag ti”, style: { fontSize: 10 } }, service.name),
-/* @**PURE** */ React.createElement(“span”, { className: “tag ti”, style: { fontSize: 10 } }, item.type === “movie” ? “\u{1F3AC} Movie” : “\u{1F4FA} Series”),
-watching && /* @**PURE** */ React.createElement(“span”, { className: “tag tl”, style: { fontSize: 10 } }, “\u25B6 Watching”),
-watched && /* @**PURE** */ React.createElement(“span”, { className: “tag ta”, style: { fontSize: 10 } }, “\u2713 Done”)
+React.createElement(“div”, { style:{flex:1,minWidth:0} },
+React.createElement(“p”, { style:{fontWeight:700,fontSize:15,textDecoration:watched?“line-through”:“none”,overflow:“hidden”,textOverflow:“ellipsis”,whiteSpace:“nowrap”} }, item.title),
+React.createElement(“div”, { style:{display:“flex”,gap:6,flexWrap:“wrap”,marginTop:5} },
+React.createElement(“span”, { className:“tag ti”, style:{fontSize:10} }, service.name),
+React.createElement(“span”, { className:“tag ti”, style:{fontSize:10} }, item.type===“movie”?“🎬 Movie”:“📺 Series”),
+watching && React.createElement(“span”, { className:“tag tl”, style:{fontSize:10} }, “▶ Watching”),
+watched  && React.createElement(“span”, { className:“tag ta”, style:{fontSize:10} }, “✓ Done”)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexDirection: “column”, gap: 6 } },
-/* @**PURE** */ React.createElement(“button”, { className: “ib”, onClick: () => onEdit(item) }, /* @**PURE** */ React.createElement(Ico, { n: “edit” })),
-/* @**PURE** */ React.createElement(“button”, { className: “ib ib-del”, onClick: () => onDelete(item.id) }, /* @**PURE** */ React.createElement(Ico, { n: “trash” }))
+React.createElement(“div”, { style:{display:“flex”,flexDirection:“column”,gap:6} },
+React.createElement(“button”, { className:“ib”, onClick:()=>onEdit(item) }, React.createElement(Ico,{n:“edit”})),
+React.createElement(“button”, { className:“ib ib-del”, onClick:()=>onDelete(item.id) }, React.createElement(Ico,{n:“trash”}))
 )
 ),
-binge && !watched && /* @**PURE** */ React.createElement(“div”, { style: { marginTop: 10, padding: “10px 12px”, background: G.surface, borderRadius: 12, border: `1px solid ${G.border}` } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 6, marginBottom: 4 } },
-/* @**PURE** */ React.createElement(Ico, { n: “clock”, size: 12 }),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted } }, “Estimated watch time”)
+binge && !watched && React.createElement(“div”, { style:{marginTop:10,padding:“10px 12px”,background:G.surface,borderRadius:12,border:`1px solid ${G.border}`} },
+React.createElement(“div”, { style:{display:“flex”,alignItems:“center”,gap:6,marginBottom:4} },
+React.createElement(Ico,{n:“clock”,size:12}),
+React.createElement(“p”, { style:{fontSize:12,color:G.muted} }, “Estimated watch time”)
 ),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, fontWeight: 700, color: G.accent } },
-binge.weeks, “ week”, binge.weeks !== 1 ? “s” : “”, “ \xB7 “, binge.months, “ month”, binge.months !== 1 ? “s” : “”, “ “, service.name
+React.createElement(“p”, { style:{fontSize:13,fontWeight:700,color:G.accent} },
+binge.weeks+” week”+(binge.weeks!==1?“s”:””)+” · “+binge.months+” month”+(binge.months!==1?“s”:””)+” “+service.name
 ),
-binge.months > 1 && /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, marginTop: 2 } },
-“\u{1F4A1} Plan “, binge.months, “ consecutive months of “, service.name
+binge.months > 1 && React.createElement(“p”, { style:{fontSize:11,color:G.muted,marginTop:2} },
+“💡 Plan “+binge.months+” consecutive months of “+service.name
 )
 ),
-!watched && /* @**PURE** */ React.createElement(
-“button”,
-{
-className: “btn bg”,
-style: { width: “100%”, marginTop: 10, padding: “8px”, fontSize: 13 },
+!watched && React.createElement(“button”, {
+className:“btn bg”,
+style:{width:“100%”,marginTop:10,padding:“8px”,fontSize:13},
 onClick: () => onToggleWatched(item.id, watched)
-},
-watching ? “\u2705 Mark as finished” : “\u25B6 Start watching”
-)
+}, watching ? “✅ Mark as finished” : “▶ Start watching”)
 );
 }
 
+// ─── WATCH SHEET (add/edit) ───────────────────────────────────────────────────
 function WatchSheet({ item, onSave, onClose }) {
 const [form, setForm] = useState(item || {
-title: “”,
-platform: “netflix”,
-type: “series”,
-episodes: 10,
-epDuration: 45,
-seasons: 1,
-status: “not_started”,
-evenings: 3
+title:””, platform:“netflix”, type:“series”,
+episodes:10, epDuration:45, seasons:1,
+status:“not_started”, evenings:3
 });
-const upd = (k, v) => setForm((f) => __spreadProps(__spreadValues({}, f), { [k]: v }));
-// FIX 1: totalEpisodes = episodes per season * seasons
-const totalEpisodes = form.type === “series” ? (form.episodes || 0) * (form.seasons || 1) : 1;
+const upd = (k,v) => setForm(f => __spreadProps(__spreadValues({},f),{[k]:v}));
+
+// FIX 1: total = episodes per season * seasons
+const totalEpisodes = form.type === “series” ? (form.episodes||0) * (form.seasons||1) : 1;
 const binge = form.type === “series” ? calcBinge(totalEpisodes, form.epDuration, form.evenings) : null;
-return /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && onClose() },
-/* @**PURE** */ React.createElement(“div”, { className: “sh” },
-/* @**PURE** */ React.createElement(“div”, { className: “hndl” }),
-/* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 18, marginBottom: 18 } }, item ? “Edit” : “Add to Watchlist”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexDirection: “column”, gap: 13 } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Title”),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “E.g. The Bear”, value: form.title, onChange: (e) => upd(“title”, e.target.value) })
+
+const handleSave = () => {
+if (!form.title.trim()) return;
+// store totalEpisodes so WatchCard uses same number
+onSave(__spreadProps(__spreadValues({},form), { totalEpisodes }));
+};
+
+return React.createElement(“div”, { className:“ov”, onClick: e => e.target===e.currentTarget && onClose() },
+React.createElement(“div”, { className:“sh” },
+React.createElement(“div”, { className:“hndl” }),
+React.createElement(“h3”, { style:{fontWeight:800,fontSize:18,marginBottom:18} }, item?“Edit”:“Add to Watchlist”),
+React.createElement(“div”, { style:{display:“flex”,flexDirection:“column”,gap:13} },
+React.createElement(“div”, null,
+React.createElement(“label”, { className:“lbl” }, “Title”),
+React.createElement(“input”, { className:“inp”, placeholder:“E.g. The Bear”, value:form.title, onChange: e=>upd(“title”,e.target.value) })
 ),
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Streaming service”),
-/* @**PURE** */ React.createElement(“select”, { className: “inp”, value: form.platform, onChange: (e) => upd(“platform”, e.target.value) },
-SERVICES.map((s) => /* @**PURE** */ React.createElement(“option”, { key: s.id, value: s.id }, s.icon, “ “, s.name))
+React.createElement(“div”, null,
+React.createElement(“label”, { className:“lbl” }, “Streaming service”),
+React.createElement(“select”, { className:“inp”, value:form.platform, onChange: e=>upd(“platform”,e.target.value) },
+SERVICES.map(s => React.createElement(“option”, { key:s.id, value:s.id }, s.icon+” “+s.name))
 )
 ),
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Type”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8 } },
-[{ v: “series”, l: “\u{1F4FA} Series” }, { v: “movie”, l: “\u{1F3AC} Movie” }].map(({ v, l }) => /* @**PURE** */ React.createElement(
-“button”,
-{
-key: v,
-className: “btn bsm”,
-style: { flex: 1, background: form.type === v ? G.accent : G.border, color: form.type === v ? “#08080f” : G.text },
-onClick: () => upd(“type”, v)
-},
-l
-))
+React.createElement(“div”, null,
+React.createElement(“label”, { className:“lbl” }, “Type”),
+React.createElement(“div”, { style:{display:“flex”,gap:8} },
+[{v:“series”,l:“📺 Series”},{v:“movie”,l:“🎬 Movie”}].map(({v,l}) =>
+React.createElement(“button”, {
+key:v, className:“btn bsm”,
+style:{ flex:1, background:form.type===v?G.accent:G.border, color:form.type===v?”#08080f”:G.text },
+onClick: ()=>upd(“type”,v)
+}, l)
+)
 )
 ),
-form.type === “series” && /* @**PURE** */ React.createElement(React.Fragment, null,
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 10 } },
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Episodes per season”),
-/* @**PURE** */ React.createElement(“input”, {
-className: “inp”,
-type: “text”,
-inputMode: “numeric”,
-placeholder: “10”,
-value: form.episodes,
-onChange: (e) => upd(“episodes”, parseInt(e.target.value) || 0)
+form.type === “series” && React.createElement(React.Fragment, null,
+React.createElement(“div”, { style:{display:“flex”,gap:10} },
+React.createElement(“div”, { style:{flex:1} },
+React.createElement(“label”, { className:“lbl” }, “Episodes per season”),
+React.createElement(“input”, {
+className:“inp”, type:“text”, inputMode:“numeric”, placeholder:“10”,
+value:form.episodes, onChange: e=>upd(“episodes”, parseInt(e.target.value)||0)
 })
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Seasons”),
-/* @**PURE** */ React.createElement(“input”, {
-className: “inp”,
-type: “text”,
-inputMode: “numeric”,
-placeholder: “1”,
-value: form.seasons,
-onChange: (e) => upd(“seasons”, parseInt(e.target.value) || 1)
+React.createElement(“div”, { style:{flex:1} },
+React.createElement(“label”, { className:“lbl” }, “Seasons”),
+React.createElement(“input”, {
+className:“inp”, type:“text”, inputMode:“numeric”, placeholder:“1”,
+value:form.seasons, onChange: e=>upd(“seasons”, parseInt(e.target.value)||1)
 })
 )
 ),
-totalEpisodes > 1 && /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginTop: -6 } },
-“Total: “, /* @**PURE** */ React.createElement(“strong”, { style: { color: G.text } }, totalEpisodes), “ episodes”
+totalEpisodes > 1 && React.createElement(“p”, { style:{fontSize:12,color:G.muted,marginTop:-4} },
+“Total: “, React.createElement(“strong”,{style:{color:G.text}}, totalEpisodes), “ episodes”
 ),
-/* @**PURE** */ React.createElement(BingeCalc, {
+React.createElement(BingeCalc, {
 totalEpisodes,
-epDuration: form.epDuration,
-setEpDuration: (v) => upd(“epDuration”, v),
-evenings: form.evenings,
-setEvenings: (v) => upd(“evenings”, v),
-result: binge
+epDuration:form.epDuration,
+setEpDuration: v=>upd(“epDuration”,v),
+evenings:form.evenings,
+setEvenings: v=>upd(“evenings”,v),
+result:binge
 })
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8, marginTop: 4 } },
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { flex: 1, padding: “13px” }, onClick: () => {
-if (form.title.trim()) onSave({
-…form,
-// FIX 1: always store totalEpisodes so WatchCard uses consistent number
-totalEpisodes: form.type === “series” ? (form.episodes || 0) * (form.seasons || 1) : 1
-});
-} }, item ? “Save” : “Add”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { flex: 1 }, onClick: onClose }, “Cancel”)
+React.createElement(“div”, { style:{display:“flex”,gap:8,marginTop:4} },
+React.createElement(“button”, { className:“btn bp”, style:{flex:1,padding:“13px”}, onClick:handleSave }, item?“Save”:“Add”),
+React.createElement(“button”, { className:“btn bg”, style:{flex:1}, onClick:onClose }, “Cancel”)
 )
 )
 )
 );
 }
 
+// ─── WATCH SCREEN ─────────────────────────────────────────────────────────────
 function WatchScreen({ watchlist, setWatchlist }) {
 const [showSheet, setShowSheet] = useState(false);
-const [editItem, setEditItem] = useState(null);
-const [filter, setFilter] = useState(“all”);
+const [editItem, setEditItem]   = useState(null);
+const [filter, setFilter]       = useState(“all”);
+
 const save = (form) => {
-const updated = __spreadProps(__spreadValues({}, form), { id: (editItem == null ? void 0 : editItem.id) || genId() });
-setWatchlist((prev) => {
-const next = editItem ? prev.map((x) => x.id === editItem.id ? updated : x) : […prev, updated];
-LS.set(“ss_watchlist”, next);
-return next;
+const updated = __spreadProps(__spreadValues({},form), { id: editItem?.id || genId() });
+setWatchlist(prev => {
+const next = editItem ? prev.map(x => x.id===editItem.id?updated:x) : […prev,updated];
+LS.set(“ss_watchlist”, next); return next;
 });
-setShowSheet(false);
-setEditItem(null);
+setShowSheet(false); setEditItem(null);
 };
-const del = (id) => setWatchlist((prev) => {
-const n = prev.filter((x) => x.id !== id);
-LS.set(“ss_watchlist”, n);
-return n;
+const del = (id) => setWatchlist(prev => { const n=prev.filter(x=>x.id!==id); LS.set(“ss_watchlist”,n); return n; });
+const toggleWatched = (id, wasWatched) => setWatchlist(prev => {
+const n = prev.map(x => x.id===id ? __spreadProps(__spreadValues({},x),{ status: wasWatched?“not_started”: x.status===“watching”?“finished”:“watching” }) : x);
+LS.set(“ss_watchlist”,n); return n;
 });
-const toggleWatched = (id, wasWatched) => setWatchlist((prev) => {
-const n = prev.map((x) => x.id === id ? __spreadProps(__spreadValues({}, x), { status: wasWatched ? “not_started” : x.status === “watching” ? “finished” : “watching” }) : x);
-LS.set(“ss_watchlist”, n);
-return n;
-});
+
 const filters = [
-{ v: “all”, l: “All”, count: watchlist.length },
-{ v: “not_started”, l: “To watch”, count: watchlist.filter((w) => w.status === “not_started”).length },
-{ v: “watching”, l: “Watching”, count: watchlist.filter((w) => w.status === “watching”).length },
-{ v: “finished”, l: “Finished”, count: watchlist.filter((w) => w.status === “finished”).length }
+{ v:“all”,         l:“All”,      count:watchlist.length },
+{ v:“not_started”, l:“To watch”, count:watchlist.filter(w=>w.status===“not_started”).length },
+{ v:“watching”,    l:“Watching”, count:watchlist.filter(w=>w.status===“watching”).length },
+{ v:“finished”,    l:“Finished”, count:watchlist.filter(w=>w.status===“finished”).length }
 ];
-const filtered = filter === “all” ? watchlist : watchlist.filter((w) => w.status === filter);
-return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 14px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Watchlist”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp bsm”, onClick: () => { setEditItem(null); setShowSheet(true); } },
-/* @**PURE** */ React.createElement(Ico, { n: “plus” }), “ Add”
+const filtered = filter===“all” ? watchlist : watchlist.filter(w=>w.status===filter);
+
+return React.createElement(“div”, { className:“scr fu” },
+React.createElement(“div”, { style:{padding:“20px 0 14px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”} },
+React.createElement(“h2”, { style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”} }, “Watchlist”),
+React.createElement(“button”, { className:“btn bp bsm”, onClick:()=>{ setEditItem(null); setShowSheet(true); } },
+React.createElement(Ico,{n:“plus”}), “ Add”
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “mrow”, style: { marginBottom: 14 } },
-filters.map((f) => /* @**PURE** */ React.createElement(
-“button”,
-{
-key: f.v,
-onClick: () => setFilter(f.v),
-style: { flexShrink: 0, padding: “7px 14px”, borderRadius: 20, border: “none”, cursor: “pointer”, fontFamily: “Outfit,sans-serif”, fontWeight: 600, fontSize: 12, background: filter === f.v ? G.accent : G.border, color: filter === f.v ? “#08080f” : G.text }
-},
-f.l, “ “, f.count > 0 && /* @**PURE** */ React.createElement(“span”, { style: { opacity: 0.7 } }, “(”, f.count, “)”)
-))
+React.createElement(“div”, { className:“mrow”, style:{marginBottom:14} },
+filters.map(f =>
+React.createElement(“button”, {
+key:f.v, onClick:()=>setFilter(f.v),
+style:{flexShrink:0,padding:“7px 14px”,borderRadius:20,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:12,background:filter===f.v?G.accent:G.border,color:filter===f.v?”#08080f”:G.text}
+}, f.l, f.count>0 && React.createElement(“span”,{style:{opacity:0.7}}, “ (”+f.count+”)”))
+)
 ),
-filtered.length === 0 && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 40, textAlign: “center”, color: G.muted } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 40, marginBottom: 12 } }, “\u{1F3AC}”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, color: G.text, marginBottom: 6 } }, “Nothing here yet”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 14 } }, “Add a movie or series to get started”)
+filtered.length===0 && React.createElement(“div”, { className:“card”, style:{padding:40,textAlign:“center”,color:G.muted} },
+React.createElement(“p”,{style:{fontSize:40,marginBottom:12}},“🎬”),
+React.createElement(“p”,{style:{fontWeight:600,color:G.text,marginBottom:6}},“Nothing here yet”),
+React.createElement(“p”,{style:{fontSize:14}},“Add a movie or series to get started”)
 ),
-filtered.map((item) => /* @**PURE** */ React.createElement(WatchCard, { key: item.id, item, onEdit: (i) => { setEditItem(i); setShowSheet(true); }, onDelete: del, onToggleWatched: toggleWatched })),
-showSheet && /* @**PURE** */ React.createElement(WatchSheet, { item: editItem, onSave: save, onClose: () => { setShowSheet(false); setEditItem(null); } })
+filtered.map(item =>
+React.createElement(WatchCard, { key:item.id, item, onEdit:i=>{ setEditItem(i); setShowSheet(true); }, onDelete:del, onToggleWatched:toggleWatched })
+),
+showSheet && React.createElement(WatchSheet, { item:editItem, onSave:save, onClose:()=>{ setShowSheet(false); setEditItem(null); } })
 );
 }
 
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
 function Dashboard({ user, subs, watchlist, savings, totalMonthly, getStatus, setSubs, setTab, upgradePremium }) {
-const warnings = subs.filter((s) => daysLeft(s.renewalDate) <= 7);
-const activeWL = watchlist.filter((w) => w.status !== “finished”);
+const warnings  = subs.filter(s => daysLeft(s.renewalDate) <= 7);
+const activeWL  = watchlist.filter(w => w.status !== “finished”);
 const totalBingeMonths = activeWL.reduce((sum, item) => {
 if (item.type !== “series”) return sum;
-const totalEps = item.totalEpisodes || (item.episodes || 0) * (item.seasons || 1);
-const b = calcBinge(totalEps, item.epDuration || 45, item.evenings || 3);
-return sum + ((b == null ? void 0 : b.months) || 0);
+const totalEps = item.totalEpisodes != null ? item.totalEpisodes : (item.episodes||0)*(item.seasons||1);
+const b = calcBinge(totalEps, item.epDuration||45, item.evenings||3);
+return sum + (b?.months||0);
 }, 0);
-return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 16px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: G.muted } }, “Welcome back \u{1F44B}”),
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, user.email.split(”@”)[0])
+
+return React.createElement(“div”, { className:“scr fu” },
+React.createElement(“div”, { style:{padding:“20px 0 16px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”} },
+React.createElement(“div”, null,
+React.createElement(“p”,{style:{fontSize:13,color:G.muted}},“Welcome back 👋”),
+React.createElement(“h2”,{style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}}, user.email.split(”@”)[0])
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 8 } },
+React.createElement(“div”, { style:{display:“flex”,alignItems:“center”,gap:8} },
 user.isPremium
-? /* @**PURE** */ React.createElement(“span”, { className: “tag tp” }, /* @**PURE** */ React.createElement(Ico, { n: “crown”, size: 13 }), “ Premium”)
-: /* @**PURE** */ React.createElement(“button”, { className: “btn bg bsm”, style: { color: G.premium, background: “#2a2000” }, onClick: () => setTab(“settings”) }, “\u2728 Upgrade”),
-/* @**PURE** */ React.createElement(“button”, { className: “ib”, onClick: () => setTab(“settings”), title: “Settings”, style: { fontSize: 18 } }, “\u2699\uFE0F”)
+? React.createElement(“span”,{className:“tag tp”}, React.createElement(Ico,{n:“crown”,size:13}), “ Premium”)
+: React.createElement(“button”,{className:“btn bg bsm”,style:{color:G.premium,background:”#2a2000”},onClick:()=>setTab(“settings”)}, “✨ Upgrade”),
+React.createElement(“button”,{className:“ib”,onClick:()=>setTab(“settings”),title:“Settings”,style:{fontSize:18}},“⚙️”)
 )
 ),
-warnings.map((sub) => {
+warnings.map(sub => {
 const days = daysLeft(sub.renewalDate);
-const st = getStatus(sub);
-const urgent = days <= 5 && st.label === “Low usage”;
-return /* @**PURE** */ React.createElement(“div”, { key: sub.id, className: urgent ? “warnbox” : “card”, style: { marginBottom: 10, padding: “14px 16px” } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 10, marginBottom: urgent ? 12 : 0 } },
-/* @**PURE** */ React.createElement(“span”, { style: { fontSize: 22 } }, sub.icon),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 14 } }, “\u26A0\uFE0F “, sub.name, “ renews in “, days, “ day”, days !== 1 ? “s” : “”),
-urgent && /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, “No recent activity”)
+const st   = getStatus(sub);
+const urgent = days<=5 && st.label===“Low usage”;
+return React.createElement(“div”, { key:sub.id, className:“card”, style:{marginBottom:10,padding:“14px 16px”} },
+React.createElement(“div”, { style:{display:“flex”,alignItems:“center”,gap:10,marginBottom:urgent?12:0} },
+React.createElement(“span”,{style:{fontSize:22}}, sub.icon),
+React.createElement(“div”,{style:{flex:1}},
+React.createElement(“p”,{style:{fontWeight:700,fontSize:14}}, “⚠️ “+sub.name+” renews in “+days+” day”+(days!==1?“s”:””)),
+urgent && React.createElement(“p”,{style:{fontSize:12,color:G.muted,marginTop:2}},“No recent activity”)
 )
 ),
-urgent && /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8 } },
-/* @**PURE** */ React.createElement(“button”, { className: “btn bd bsm”, onClick: () => setSubs((p) => { const n = p.filter((s) => s.id !== sub.id); LS.set(“ss_subs”, n); return n; }) }, “Cancel”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg bsm” }, “Keep”)
+urgent && React.createElement(“div”,{style:{display:“flex”,gap:8}},
+React.createElement(“button”,{className:“btn bd bsm”,onClick:()=>setSubs(p=>{ const n=p.filter(s=>s.id!==sub.id); LS.set(“ss_subs”,n); return n; })},“Cancel”),
+React.createElement(“button”,{className:“btn bg bsm”},“Keep”)
 )
 );
 }),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 22, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginBottom: 4 } }, “Total per month”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 42, fontWeight: 900, letterSpacing: “-2px” } },
-“\u20AC”, totalMonthly.toFixed(2).replace(”.”, “,”),
-/* @**PURE** */ React.createElement(“span”, { style: { fontSize: 16, color: G.muted, fontWeight: 400 } }, “/mo”)
+React.createElement(“div”, { className:“card”, style:{padding:22,marginBottom:12} },
+React.createElement(“p”,{style:{fontSize:12,color:G.muted,marginBottom:4}},“Total per month”),
+React.createElement(“p”,{style:{fontSize:42,fontWeight:900,letterSpacing:”-2px”}},
+“€”+totalMonthly.toFixed(2).replace(”.”,”,”),
+React.createElement(“span”,{style:{fontSize:16,color:G.muted,fontWeight:400}},”/mo”)
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “sep” }),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Current per year”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 18 } }, fmt(savings.huidigJaar))
+React.createElement(“div”,{className:“sep”}),
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”}},
+React.createElement(“div”,null,
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Current per year”),
+React.createElement(“p”,{style:{fontWeight:700,fontSize:18}}, fmt(savings.huidigJaar))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “right” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “With Switch Strategy”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 18, color: G.accent } }, savings.strategieJaar !== null ? fmt(savings.strategieJaar) : “Generate plan \u2192”)
+React.createElement(“div”,{style:{textAlign:“right”}},
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“With Switch Strategy”),
+React.createElement(“p”,{style:{fontWeight:700,fontSize:18,color:G.accent}}, savings.strategieJaar!==null ? fmt(savings.strategieJaar) : “Generate plan →”)
 )
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “hero”, style: { marginBottom: 12 } },
-savings.besparing !== null ? /* @**PURE** */ React.createElement(React.Fragment, null,
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginBottom: 6 } }, “Savings with Switch Strategy”),
-/* @**PURE** */ React.createElement(“div”, { className: “heroamt” }, fmt(savings.besparing)),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginTop: 6 } }, “per year \xB7 based on your plan”)
-) : /* @**PURE** */ React.createElement(React.Fragment, null,
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginBottom: 6 } }, “Potential savings”),
-/* @**PURE** */ React.createElement(“div”, { className: “heroamt” }, fmt(savings.huidigJaar * 0.5)),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginTop: 6 } }, “per year \xB7 generate a Switch Plan for exact figures”)
+React.createElement(“div”, { className:“hero”, style:{marginBottom:12} },
+savings.besparing !== null
+? React.createElement(React.Fragment, null,
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginBottom:6}},“Savings with Switch Strategy”),
+React.createElement(“div”,{className:“heroamt”}, fmt(savings.besparing)),
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginTop:6}},“per year · based on your plan”)
+)
+: React.createElement(React.Fragment, null,
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginBottom:6}},“Potential savings”),
+React.createElement(“div”,{className:“heroamt”}, fmt(savings.huidigJaar*0.5)),
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginTop:6}},“per year · generate a Switch Plan for exact figures”)
 ),
-!user.isPremium && /* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { marginTop: 16 }, onClick: () => setTab(“switch”) }, “See how \u2192”)
+!user.isPremium && React.createElement(“button”,{className:“btn bp”,style:{marginTop:16},onClick:()=>setTab(“switch”)},“See how →”)
 ),
-activeWL.length > 0 && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15 } }, “Watchlist summary”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg bsm”, onClick: () => setTab(“watchlist”) }, “View all”)
+activeWL.length > 0 && React.createElement(“div”, { className:“card”, style:{padding:16,marginBottom:12} },
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:12}},
+React.createElement(“p”,{style:{fontWeight:700,fontSize:15}},“Watchlist summary”),
+React.createElement(“button”,{className:“btn bg bsm”,onClick:()=>setTab(“watchlist”)},“View all”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 16 } },
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 28, fontWeight: 900, color: G.accent } }, activeWL.length),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “To watch”)
+React.createElement(“div”,{style:{display:“flex”,gap:16}},
+React.createElement(“div”,{style:{textAlign:“center”,flex:1}},
+React.createElement(“p”,{style:{fontSize:28,fontWeight:900,color:G.accent}}, activeWL.length),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“To watch”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { width: 1, background: G.border } }),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 28, fontWeight: 900, color: G.premium } }, totalBingeMonths),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Months needed”)
+React.createElement(“div”,{style:{width:1,background:G.border}}),
+React.createElement(“div”,{style:{textAlign:“center”,flex:1}},
+React.createElement(“p”,{style:{fontSize:28,fontWeight:900,color:G.premium}}, totalBingeMonths),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Months needed”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { width: 1, background: G.border } }),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 28, fontWeight: 900, color: G.warn } }, new Set(activeWL.map((w) => w.platform)).size),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Services”)
+React.createElement(“div”,{style:{width:1,background:G.border}}),
+React.createElement(“div”,{style:{textAlign:“center”,flex:1}},
+React.createElement(“p”,{style:{fontSize:28,fontWeight:900,color:G.warn}}, new Set(activeWL.map(w=>w.platform)).size),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Services”)
 )
 )
 ),
-subs.length > 0 && /* @**PURE** */ React.createElement(“div”, { style: { marginBottom: 16 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 16, marginBottom: 10 } }, “Quick Launch”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8, flexWrap: “wrap” } },
-subs.map((sub) => {
+subs.length > 0 && React.createElement(“div”, { style:{marginBottom:16} },
+React.createElement(“p”,{style:{fontWeight:700,fontSize:16,marginBottom:10}},“Quick Launch”),
+React.createElement(“div”,{style:{display:“flex”,gap:8,flexWrap:“wrap”}},
+subs.map(sub => {
 const service = svc(sub.serviceId);
-return /* @**PURE** */ React.createElement(“button”, {
-key: sub.id,
-onClick: () => openApp(service.url, service.deepLink),
-style: { display: “flex”, flexDirection: “column”, alignItems: “center”, gap: 4, background: service.color + “22”, border: `1px solid ${service.color}44`, borderRadius: 14, padding: “10px 16px”, cursor: “pointer”, minWidth: 72, flex: 1 }
+return React.createElement(“button”, {
+key:sub.id,
+onClick:()=>openApp(service.url, service.deepLink),
+style:{display:“flex”,flexDirection:“column”,alignItems:“center”,gap:4,background:service.color+“22”,border:`1px solid ${service.color}44`,borderRadius:14,padding:“10px 16px”,cursor:“pointer”,minWidth:72,flex:1}
 },
-/* @**PURE** */ React.createElement(“span”, { style: { fontSize: 24 } }, service.icon),
-/* @**PURE** */ React.createElement(“span”, { style: { fontSize: 11, fontWeight: 700, color: service.color } }, service.name.split(” “)[0])
+React.createElement(“span”,{style:{fontSize:24}}, service.icon),
+React.createElement(“span”,{style:{fontSize:11,fontWeight:700,color:service.color}}, service.name.split(” “)[0])
 );
 })
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 10 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 16 } }, “Subscriptions”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg bsm”, onClick: () => setTab(“subs”) }, “View all”)
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,alignItems:“center”,marginBottom:10}},
+React.createElement(“p”,{style:{fontWeight:700,fontSize:16}},“Subscriptions”),
+React.createElement(“button”,{className:“btn bg bsm”,onClick:()=>setTab(“subs”)},“View all”)
 ),
-subs.slice(0, 3).map((sub) => {
+subs.slice(0,3).map(sub => {
 const days = daysLeft(sub.renewalDate);
-const st = getStatus(sub);
-return /* @**PURE** */ React.createElement(“div”, { key: sub.id, className: “card cardh”, style: { padding: “14px 16px”, marginBottom: 8, display: “flex”, alignItems: “center”, gap: 12 }, onClick: () => setTab(“subs”) },
-/* @**PURE** */ React.createElement(“div”, { style: { width: 44, height: 44, borderRadius: 12, background: sub.color + “22”, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 22, flexShrink: 0 } }, sub.icon),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700 } }, sub.name),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted } }, “Renews in “, days, “ day”, days !== 1 ? “s” : “”)
+const st   = getStatus(sub);
+return React.createElement(“div”, { key:sub.id, className:“card cardh”, style:{padding:“14px 16px”,marginBottom:8,display:“flex”,alignItems:“center”,gap:12}, onClick:()=>setTab(“subs”) },
+React.createElement(“div”,{style:{width:44,height:44,borderRadius:12,background:sub.color+“22”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:22,flexShrink:0}}, sub.icon),
+React.createElement(“div”,{style:{flex:1}},
+React.createElement(“p”,{style:{fontWeight:700}}, sub.name),
+React.createElement(“p”,{style:{fontSize:12,color:G.muted}}, “Renews in “+days+” day”+(days!==1?“s”:””))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “right” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700 } }, “\u20AC”, sub.price.toFixed(2)),
-/* @**PURE** */ React.createElement(“span”, { className: `tag ${st.cls}` }, /* @**PURE** */ React.createElement(“span”, { className: “dot”, style: { background: st.dot } }), st.label)
+React.createElement(“div”,{style:{textAlign:“right”}},
+React.createElement(“p”,{style:{fontWeight:700}}, “€”+sub.price.toFixed(2)),
+React.createElement(“span”,{className:`tag ${st.cls}`}, React.createElement(“span”,{className:“dot”,style:{background:st.dot}}), st.label)
 )
 );
 })
 );
 }
 
+// ─── SUBS SCREEN ──────────────────────────────────────────────────────────────
 function SubsScreen({ subs, setSubs, watchlist, savings, totalMonthly, getStatus, openAddSub, openEditSub }) {
-return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 16px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Subscriptions”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp bsm”, onClick: openAddSub }, /* @**PURE** */ React.createElement(Ico, { n: “plus” }), “ Add”)
+return React.createElement(“div”, { className:“scr fu” },
+React.createElement(“div”,{style:{padding:“20px 0 16px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}},
+React.createElement(“h2”,{style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}},“Subscriptions”),
+React.createElement(“button”,{className:“btn bp bsm”,onClick:openAddSub}, React.createElement(Ico,{n:“plus”}), “ Add”)
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: “14px 16px”, marginBottom: 14, display: “flex”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Monthly”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 800, fontSize: 20 } }, “\u20AC”, totalMonthly.toFixed(2))
+React.createElement(“div”,{className:“card”,style:{padding:“14px 16px”,marginBottom:14,display:“flex”,justifyContent:“space-between”}},
+React.createElement(“div”,null,
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Monthly”),
+React.createElement(“p”,{style:{fontWeight:800,fontSize:20}}, “€”+totalMonthly.toFixed(2))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “right” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Current per year”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 800, fontSize: 20 } }, fmt(savings.huidigJaar))
+React.createElement(“div”,{style:{textAlign:“right”}},
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Current per year”),
+React.createElement(“p”,{style:{fontWeight:800,fontSize:20}}, fmt(savings.huidigJaar))
 )
 ),
-subs.length === 0 && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 40, textAlign: “center”, color: G.muted } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 40, marginBottom: 12 } }, “\u{1F4ED}”),
-/* @**PURE** */ React.createElement(“p”, null, “No subscriptions. Add one!”)
+subs.length===0 && React.createElement(“div”,{className:“card”,style:{padding:40,textAlign:“center”,color:G.muted}},
+React.createElement(“p”,{style:{fontSize:40,marginBottom:12}},“📭”),
+React.createElement(“p”,null,“No subscriptions yet. Add one!”)
 ),
-subs.map((sub) => {
-const days = daysLeft(sub.renewalDate);
-const st = getStatus(sub);
-const wlCount = watchlist.filter((w) => w.platform === sub.serviceId && w.status !== “finished”).length;
-return /* @**PURE** */ React.createElement(“div”, { key: sub.id, className: “card”, style: { marginBottom: 10, padding: 16 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 12 } },
-/* @**PURE** */ React.createElement(“div”, { style: { width: 52, height: 52, borderRadius: 14, background: sub.color + “20”, border: `2px solid ${sub.color}50`, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 28, flexShrink: 0 } }, sub.icon),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 16 } }, sub.name),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, “Renews “, days <= 0 ? “today” : `in ${days} days`, “ \xB7 “, wlCount, “ title”, wlCount !== 1 ? “s” : “”)
+subs.map(sub => {
+const days    = daysLeft(sub.renewalDate);
+const st      = getStatus(sub);
+const wlCount = watchlist.filter(w=>w.platform===sub.serviceId && w.status!==“finished”).length;
+return React.createElement(“div”,{key:sub.id,className:“card”,style:{marginBottom:10,padding:16}},
+React.createElement(“div”,{style:{display:“flex”,alignItems:“center”,gap:12}},
+React.createElement(“div”,{style:{width:52,height:52,borderRadius:14,background:sub.color+“20”,border:`2px solid ${sub.color}50`,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:28,flexShrink:0}}, sub.icon),
+React.createElement(“div”,{style:{flex:1}},
+React.createElement(“p”,{style:{fontWeight:700,fontSize:16}}, sub.name),
+React.createElement(“p”,{style:{fontSize:12,color:G.muted,marginTop:2}}, “Renews “+(days<=0?“today”:`in ${days} days`)+” · “+wlCount+” title”+(wlCount!==1?“s”:””))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “right” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 800, fontSize: 18 } }, “\u20AC”, sub.price.toFixed(2)),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “/mo”)
+React.createElement(“div”,{style:{textAlign:“right”}},
+React.createElement(“p”,{style:{fontWeight:800,fontSize:18}}, “€”+sub.price.toFixed(2)),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},”/mo”)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “space-between”, marginTop: 12 } },
-/* @**PURE** */ React.createElement(“span”, { className: `tag ${st.cls}` }, /* @**PURE** */ React.createElement(“span”, { className: “dot”, style: { background: st.dot } }), st.label),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 6 } },
-/* @**PURE** */ React.createElement(“button”, { className: “ib”, title: “Open app”, onClick: () => { var _a; return openApp(sub.url, (_a = SERVICES.find((p) => p.id === sub.serviceId)) == null ? void 0 : _a.deepLink); } }, /* @**PURE** */ React.createElement(Ico, { n: “open” })),
-/* @**PURE** */ React.createElement(“button”, { className: “ib”, onClick: () => openEditSub(sub) }, /* @**PURE** */ React.createElement(Ico, { n: “edit” })),
-/* @**PURE** */ React.createElement(“button”, { className: “ib ib-del”, onClick: () => setSubs((p) => { const n = p.filter((s) => s.id !== sub.id); LS.set(“ss_subs”, n); return n; }) }, /* @**PURE** */ React.createElement(Ico, { n: “trash” }))
+React.createElement(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,marginTop:12}},
+React.createElement(“span”,{className:`tag ${st.cls}`}, React.createElement(“span”,{className:“dot”,style:{background:st.dot}}), st.label),
+React.createElement(“div”,{style:{display:“flex”,gap:6}},
+React.createElement(“button”,{className:“ib”,title:“Open app”,onClick:()=>openApp(sub.url, SERVICES.find(p=>p.id===sub.serviceId)?.deepLink)}, React.createElement(Ico,{n:“open”})),
+React.createElement(“button”,{className:“ib”,onClick:()=>openEditSub(sub)}, React.createElement(Ico,{n:“edit”})),
+React.createElement(“button”,{className:“ib ib-del”,onClick:()=>setSubs(p=>{ const n=p.filter(s=>s.id!==sub.id); LS.set(“ss_subs”,n); return n; })}, React.createElement(Ico,{n:“trash”}))
 )
 )
 );
@@ -642,338 +590,333 @@ return /* @**PURE** */ React.createElement(“div”, { key: sub.id, className: 
 );
 }
 
-// FIX 2: “Nieuws” → “Suggestions” throughout NewsScreen
+// ─── SUGGESTIONS SCREEN (was NewsScreen) ─────────────────────────────────────
+// FIX 2: title changed to “Suggestions”
 function NewsScreen({ watchlist, setWatchlist, subs }) {
-var _a;
-const [items, setItems] = useState([]);
+const [items,   setItems]   = useState([]);
 const [loading, setLoading] = useState(false);
-const [error, setError] = useState(””);
-const [filter, setFilter] = useState(“all”);
-const [type, setType] = useState(“movie”);
-const [detail, setDetail] = useState(null);
-const [added, setAdded] = useState({});
-const wlTitles = new Set(watchlist.map((w) => w.title.toLowerCase()));
+const [error,   setError]   = useState(””);
+const [filter,  setFilter]  = useState(“all”);
+const [type,    setType]    = useState(“movie”);
+const [detail,  setDetail]  = useState(null);
+const [added,   setAdded]   = useState({});
+const wlTitles = new Set(watchlist.map(w => w.title.toLowerCase()));
+
 const fetchNews = async (mediaType, providerId) => {
-var _a2;
-setLoading(true);
-setError(””);
+setLoading(true); setError(””);
 try {
-const url = providerId === “all”
+const url = providerId===“all”
 ? `${TMDB_BASE}/discover/${mediaType}?api_key=${TMDB_KEY}&language=en-US&sort_by=popularity.desc&watch_region=NL&with_watch_monetization_types=flatrate`
 : `${TMDB_BASE}/discover/${mediaType}?api_key=${TMDB_KEY}&language=en-US&sort_by=popularity.desc&watch_region=NL&with_watch_providers=${providerId}&with_watch_monetization_types=flatrate`;
-const res = await fetch(url);
+const res  = await fetch(url);
 if (!res.ok) throw new Error();
 const data = await res.json();
-setItems(((_a2 = data.results) == null ? void 0 : _a2.slice(0, 20)) || []);
-} catch (e) {
-setError(“Failed to load suggestions.”);
-} finally {
-setLoading(false);
-}
+setItems(data.results?.slice(0,20) || []);
+} catch(e) { setError(“Failed to load suggestions.”); }
+finally    { setLoading(false); }
 };
-useEffect(() => { fetchNews(“movie”, “all”); }, []);
+
+useEffect(() => { fetchNews(“movie”,“all”); }, []);
+
 const handleFilter = (f) => {
 setFilter(f);
-const p = TMDB_PROV.find((x) => x.serviceId === f);
+const p = TMDB_PROV.find(x=>x.serviceId===f);
 fetchNews(type, p ? p.tmdbId : “all”);
 };
 const handleType = (t) => {
 setType(t);
-const p = TMDB_PROV.find((x) => x.serviceId === filter);
+const p = TMDB_PROV.find(x=>x.serviceId===filter);
 fetchNews(t, p ? p.tmdbId : “all”);
 };
+
 const addToWatchlist = async (item) => {
-var _a2, _b;
-const title = item.title || item.name || “Unknown”;
-const platform = filter !== “all” ? filter : ((_a2 = subs[0]) == null ? void 0 : _a2.serviceId) || “netflix”;
-const mediaType = type === “movie” ? “movie” : “tv”;
-let episodes = type === “movie” ? 1 : 10;
-let seasons = 1;
-let epDuration = type === “movie” ? 120 : 45;
+const title    = item.title || item.name || “Unknown”;
+const platform = filter!==“all” ? filter : subs[0]?.serviceId || “netflix”;
+const mediaType = type===“movie” ? “movie” : “tv”;
+let episodes=type===“movie”?1:10, seasons=1, epDuration=type===“movie”?120:45;
 try {
 const res = await fetch(`${TMDB_BASE}/${mediaType}/${item.id}?api_key=${TMDB_KEY}&language=en-US`);
 if (res.ok) {
 const d = await res.json();
-if (mediaType === “tv”) {
-seasons = d.number_of_seasons || 1;
-episodes = Math.round((d.number_of_episodes || 10) / (d.number_of_seasons || 1));
-epDuration = ((_b = d.episode_run_time) == null ? void 0 : _b[0]) || 45;
-} else {
-epDuration = d.runtime || 120;
+if (mediaType===“tv”) {
+seasons    = d.number_of_seasons || 1;
+episodes   = Math.round((d.number_of_episodes||10)/(d.number_of_seasons||1));
+epDuration = d.episode_run_time?.[0] || 45;
+} else { epDuration = d.runtime || 120; }
 }
-}
-} catch (e) {}
-const totalEps = type === “movie” ? 1 : episodes * seasons;
-const newItem = {
-id: genId(), title, platform,
-type: type === “movie” ? “movie” : “series”,
-episodes, seasons, epDuration,
-totalEpisodes: totalEps,
-status: “not_started”, evenings: 3
-};
-setWatchlist((prev) => { const n = […prev, newItem]; LS.set(“ss_watchlist”, n); return n; });
-setAdded((a) => __spreadProps(__spreadValues({}, a), { [item.id]: true }));
+} catch(e){}
+const totalEpisodes = type===“movie” ? 1 : episodes*seasons;
+const newItem = { id:genId(), title, platform, type:type===“movie”?“movie”:“series”, episodes, seasons, epDuration, totalEpisodes, status:“not_started”, evenings:3 };
+setWatchlist(prev => { const n=[…prev,newItem]; LS.set(“ss_watchlist”,n); return n; });
+setAdded(a => __spreadProps(__spreadValues({},a),{[item.id]:true}));
 setDetail(null);
 };
-const isAdded = (item) => added[item.id] || wlTitles.has((item.title || item.name || “”).toLowerCase());
-const myProvs = TMDB_PROV.filter((p) => subs.some((s) => s.serviceId === p.serviceId)).map((p) => __spreadValues(__spreadValues({}, p), SERVICES.find((s) => s.id === p.serviceId)));
-return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 14px” } },
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Suggestions”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: G.muted, marginTop: 2 } }, “New movies & series on your services”)
+
+const isAdded = (item) => added[item.id] || wlTitles.has((item.title||item.name||””).toLowerCase());
+const myProvs = TMDB_PROV.filter(p=>subs.some(s=>s.serviceId===p.serviceId)).map(p=>__spreadValues(__spreadValues({},p),SERVICES.find(s=>s.id===p.serviceId)));
+
+return React.createElement(“div”, { className:“scr fu” },
+React.createElement(“div”,{style:{padding:“20px 0 14px”}},
+React.createElement(“h2”,{style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}},“Suggestions”),
+React.createElement(“p”,{style:{fontSize:13,color:G.muted,marginTop:2}},“New movies & series on your services”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, background: G.surface, borderRadius: 12, padding: 4, border: `1px solid ${G.border}`, marginBottom: 12 } },
-[{ v: “movie”, l: “\u{1F3AC} Movies” }, { v: “tv”, l: “\u{1F4FA} Series” }].map(({ v, l }) => /* @**PURE** */ React.createElement(“button”, { key: v, onClick: () => handleType(v), style: { flex: 1, padding: “9px”, border: “none”, cursor: “pointer”, fontFamily: “Outfit,sans-serif”, fontWeight: 600, fontSize: 14, borderRadius: 9, background: type === v ? G.card : “transparent”, color: type === v ? G.text : G.muted } }, l))
-),
-/* @**PURE** */ React.createElement(“div”, { className: “mrow”, style: { marginBottom: 14 } },
-/* @**PURE** */ React.createElement(“button”, { onClick: () => handleFilter(“all”), style: { flexShrink: 0, padding: “7px 14px”, borderRadius: 20, border: “none”, cursor: “pointer”, fontFamily: “Outfit,sans-serif”, fontWeight: 600, fontSize: 12, background: filter === “all” ? G.accent : G.border, color: filter === “all” ? “#08080f” : G.text } }, “All”),
-myProvs.map((p) => /* @**PURE** */ React.createElement(“button”, { key: p.serviceId, onClick: () => handleFilter(p.serviceId), style: { flexShrink: 0, padding: “7px 14px”, borderRadius: 20, border: “none”, cursor: “pointer”, fontFamily: “Outfit,sans-serif”, fontWeight: 600, fontSize: 12, background: filter === p.serviceId ? p.color : G.border, color: filter === p.serviceId ? “white” : G.text } }, p.icon, “ “, p.name))
-),
-loading && /* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, padding: “60px 0”, color: G.muted } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 40, marginBottom: 12 } }, “\u23F3”),
-/* @**PURE** */ React.createElement(“p”, null, “Loading…”)
-),
-error && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 20, textAlign: “center”, color: G.danger } },
-/* @**PURE** */ React.createElement(“p”, null, error),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { marginTop: 12 }, onClick: () => handleFilter(filter) }, “Retry”)
-),
-!loading && !error && /* @**PURE** */ React.createElement(“div”, { className: “pgrid” },
-items.map((item) => {
-const title = item.title || item.name || “Unknown”;
-const poster = item.poster_path ? `${TMDB_IMG}${item.poster_path}` : null;
-const rating = item.vote_average ? item.vote_average.toFixed(1) : “?”;
-const year = (item.release_date || item.first_air_date || “”).slice(0, 4);
-const al = isAdded(item);
-return /* @**PURE** */ React.createElement(“div”, { key: item.id, className: “card”, style: { overflow: “hidden”, cursor: “pointer” }, onClick: () => setDetail(item) },
-/* @**PURE** */ React.createElement(“div”, { style: { width: “100%”, aspectRatio: “2/3”, background: G.surface, position: “relative”, overflow: “hidden” } },
-poster ? /* @**PURE** */ React.createElement(“img”, { src: poster, alt: title, style: { width: “100%”, height: “100%”, objectFit: “cover” } }) : /* @**PURE** */ React.createElement(“div”, { style: { width: “100%”, height: “100%”, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 40 } }, “\u{1F3AC}”),
-/* @**PURE** */ React.createElement(“div”, { style: { position: “absolute”, top: 8, left: 8, background: “rgba(0,0,0,.75)”, borderRadius: 8, padding: “3px 7px”, display: “flex”, alignItems: “center”, gap: 3 } },
-/* @**PURE** */ React.createElement(Ico, { n: “star”, size: 10 }),
-/* @**PURE** */ React.createElement(“span”, { style: { fontSize: 11, fontWeight: 700, color: “#f7c948” } }, rating)
-),
-al && /* @**PURE** */ React.createElement(“div”, { style: { position: “absolute”, top: 8, right: 8, background: G.accent, borderRadius: 8, padding: “3px 7px” } },
-/* @**PURE** */ React.createElement(“span”, { style: { fontSize: 10, fontWeight: 700, color: “#08080f” } }, “\u2713”)
+React.createElement(“div”,{style:{display:“flex”,background:G.surface,borderRadius:12,padding:4,border:`1px solid ${G.border}`,marginBottom:12}},
+[{v:“movie”,l:“🎬 Movies”},{v:“tv”,l:“📺 Series”}].map(({v,l}) =>
+React.createElement(“button”,{key:v,onClick:()=>handleType(v),style:{flex:1,padding:“9px”,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:14,borderRadius:9,background:type===v?G.card:“transparent”,color:type===v?G.text:G.muted}}, l)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “10px 10px 12px” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 13, lineHeight: 1.3, marginBottom: 4 } }, title),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, marginBottom: 8 } }, year),
-/* @**PURE** */ React.createElement(“button”, {
-className: “btn”,
-style: { width: “100%”, padding: “7px”, fontSize: 12, borderRadius: 9, background: al ? G.border : G.accent, color: al ? G.muted : “#08080f”, fontWeight: 700 },
-onClick: (e) => { e.stopPropagation(); if (!al) addToWatchlist(item); }
-}, al ? “\u2713 Added” : “+ Watchlist”)
+React.createElement(“div”,{className:“mrow”,style:{marginBottom:14}},
+React.createElement(“button”,{onClick:()=>handleFilter(“all”),style:{flexShrink:0,padding:“7px 14px”,borderRadius:20,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:12,background:filter===“all”?G.accent:G.border,color:filter===“all”?”#08080f”:G.text}},“All”),
+myProvs.map(p =>
+React.createElement(“button”,{key:p.serviceId,onClick:()=>handleFilter(p.serviceId),style:{flexShrink:0,padding:“7px 14px”,borderRadius:20,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:12,background:filter===p.serviceId?p.color:G.border,color:filter===p.serviceId?“white”:G.text}}, p.icon+” “+p.name)
+)
+),
+loading && React.createElement(“div”,{style:{textAlign:“center”,padding:“60px 0”,color:G.muted}},
+React.createElement(“p”,{style:{fontSize:40,marginBottom:12}},“⏳”),
+React.createElement(“p”,null,“Loading…”)
+),
+error && React.createElement(“div”,{className:“card”,style:{padding:20,textAlign:“center”,color:G.danger}},
+React.createElement(“p”,null,error),
+React.createElement(“button”,{className:“btn bg”,style:{marginTop:12},onClick:()=>handleFilter(filter)},“Retry”)
+),
+!loading && !error && React.createElement(“div”,{className:“pgrid”},
+items.map(item => {
+const title  = item.title||item.name||“Unknown”;
+const poster = item.poster_path ? `${TMDB_IMG}${item.poster_path}` : null;
+const rating = item.vote_average ? item.vote_average.toFixed(1) : “?”;
+const year   = (item.release_date||item.first_air_date||””).slice(0,4);
+const al     = isAdded(item);
+return React.createElement(“div”,{key:item.id,className:“card”,style:{overflow:“hidden”,cursor:“pointer”},onClick:()=>setDetail(item)},
+React.createElement(“div”,{style:{width:“100%”,aspectRatio:“2/3”,background:G.surface,position:“relative”,overflow:“hidden”}},
+poster
+? React.createElement(“img”,{src:poster,alt:title,style:{width:“100%”,height:“100%”,objectFit:“cover”}})
+: React.createElement(“div”,{style:{width:“100%”,height:“100%”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:40}},“🎬”),
+React.createElement(“div”,{style:{position:“absolute”,top:8,left:8,background:“rgba(0,0,0,.75)”,borderRadius:8,padding:“3px 7px”,display:“flex”,alignItems:“center”,gap:3}},
+React.createElement(Ico,{n:“star”,size:10}),
+React.createElement(“span”,{style:{fontSize:11,fontWeight:700,color:”#f7c948”}}, rating)
+),
+al && React.createElement(“div”,{style:{position:“absolute”,top:8,right:8,background:G.accent,borderRadius:8,padding:“3px 7px”}},
+React.createElement(“span”,{style:{fontSize:10,fontWeight:700,color:”#08080f”}},“✓”)
+)
+),
+React.createElement(“div”,{style:{padding:“10px 10px 12px”}},
+React.createElement(“p”,{style:{fontWeight:700,fontSize:13,lineHeight:1.3,marginBottom:4}}, title),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted,marginBottom:8}}, year),
+React.createElement(“button”,{
+className:“btn”,
+style:{width:“100%”,padding:“7px”,fontSize:12,borderRadius:9,background:al?G.border:G.accent,color:al?G.muted:”#08080f”,fontWeight:700},
+onClick: e => { e.stopPropagation(); if(!al) addToWatchlist(item); }
+}, al ? “✓ Added” : “+ Watchlist”)
 )
 );
 })
 ),
-detail && /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && setDetail(null) },
-/* @**PURE** */ React.createElement(“div”, { className: “sh” },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “flex-end”, marginBottom: 16 } },
-/* @**PURE** */ React.createElement(“button”, { className: “ib”, onClick: () => setDetail(null) }, /* @**PURE** */ React.createElement(Ico, { n: “x” }))
+detail && React.createElement(“div”,{className:“ov”,onClick:e=>e.target===e.currentTarget&&setDetail(null)},
+React.createElement(“div”,{className:“sh”},
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“flex-end”,marginBottom:16}},
+React.createElement(“button”,{className:“ib”,onClick:()=>setDetail(null)}, React.createElement(Ico,{n:“x”}))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 14, marginBottom: 16 } },
+React.createElement(“div”,{style:{display:“flex”,gap:14,marginBottom:16}},
 detail.poster_path
-? /* @**PURE** */ React.createElement(“img”, { src: `${TMDB_IMG}${detail.poster_path}`, alt: “”, style: { width: 90, height: 135, borderRadius: 12, objectFit: “cover”, flexShrink: 0 } })
-: /* @**PURE** */ React.createElement(“div”, { style: { width: 90, height: 135, borderRadius: 12, background: G.surface, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 36, flexShrink: 0 } }, “\u{1F3AC}”),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 800, fontSize: 17, lineHeight: 1.3, marginBottom: 6 } }, detail.title || detail.name),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 6, flexWrap: “wrap” } },
-/* @**PURE** */ React.createElement(“span”, { className: “tag ta” }, /* @**PURE** */ React.createElement(Ico, { n: “star”, size: 11 }), “ “, ((_a = detail.vote_average) == null ? void 0 : _a.toFixed(1)) || “?”),
-/* @**PURE** */ React.createElement(“span”, { className: “tag ti” }, (detail.release_date || detail.first_air_date || “”).slice(0, 4))
+? React.createElement(“img”,{src:`${TMDB_IMG}${detail.poster_path}`,alt:””,style:{width:90,height:135,borderRadius:12,objectFit:“cover”,flexShrink:0}})
+: React.createElement(“div”,{style:{width:90,height:135,borderRadius:12,background:G.surface,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:36,flexShrink:0}},“🎬”),
+React.createElement(“div”,{style:{flex:1}},
+React.createElement(“p”,{style:{fontWeight:800,fontSize:17,lineHeight:1.3,marginBottom:6}}, detail.title||detail.name),
+React.createElement(“div”,{style:{display:“flex”,gap:6,flexWrap:“wrap”}},
+React.createElement(“span”,{className:“tag ta”}, React.createElement(Ico,{n:“star”,size:11}), “ “+(detail.vote_average?.toFixed(1)||”?”)),
+React.createElement(“span”,{className:“tag ti”}, (detail.release_date||detail.first_air_date||””).slice(0,4))
 )
 )
 ),
-detail.overview && /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 14, color: G.muted, lineHeight: 1.6, marginBottom: 16 } }, detail.overview),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: () => addToWatchlist(detail), disabled: isAdded(detail) },
-isAdded(detail) ? “\u2713 Already in your watchlist” : “+ Add to watchlist”
+detail.overview && React.createElement(“p”,{style:{fontSize:14,color:G.muted,lineHeight:1.6,marginBottom:16}}, detail.overview),
+React.createElement(“button”,{className:“btn bp”,style:{width:“100%”,padding:“14px”},onClick:()=>addToWatchlist(detail),disabled:isAdded(detail)},
+isAdded(detail) ? “✓ Already in your watchlist” : “+ Add to watchlist”
 )
 )
 )
 );
 }
 
+// ─── SWITCH SCREEN ────────────────────────────────────────────────────────────
 function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }) {
-// FIX 3: Build 12-month plan starting from current month
+
+// FIX 3: plan starts at current calendar month
 const generateStrategy = () => {
-var *a;
 const platformMonths = {};
-watchlist.filter((w) => w.status !== “finished”).forEach((w) => {
-if (!platformMonths[w.platform]) platformMonths[w.platform] = 0;
-if (w.type === “series”) {
-const totalEps = w.totalEpisodes || (w.episodes || 0) * (w.seasons || 1);
-const b = calcBinge(totalEps, w.epDuration || 45, w.evenings || 3);
-platformMonths[w.platform] += (b == null ? void 0 : b.months) || 1;
+watchlist.filter(w=>w.status!==“finished”).forEach(w => {
+if (!platformMonths[w.platform]) platformMonths[w.platform]=0;
+if (w.type===“series”) {
+const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes||0)*(w.seasons||1);
+const b = calcBinge(totalEps, w.epDuration||45, w.evenings||3);
+platformMonths[w.platform] += b?.months||1;
 } else {
 platformMonths[w.platform] += 1;
 }
 });
-const sorted = Object.entries(platformMonths).sort((a, b) => b[1] - a[1]).map(([serviceId, months]) => ({
-serviceId, months: Math.min(months, 4),
-sub: subs.find((s) => s.serviceId === serviceId),
-service: SERVICES.find((s) => s.id === serviceId)
-})).filter((p) => p.service);
-subs.forEach((sub) => {
-if (!sorted.find((p) => p.serviceId === sub.serviceId)) {
-sorted.push({ serviceId: sub.serviceId, months: 1, sub, service: SERVICES.find((s) => s.id === sub.serviceId) });
-}
+const sorted = Object.entries(platformMonths)
+.sort((a,b)=>b[1]-a[1])
+.map(([serviceId,months])=>({
+serviceId, months:Math.min(months,4),
+sub:subs.find(s=>s.serviceId===serviceId),
+service:SERVICES.find(s=>s.id===serviceId)
+}))
+.filter(p=>p.service);
+subs.forEach(sub => {
+if (!sorted.find(p=>p.serviceId===sub.serviceId))
+sorted.push({ serviceId:sub.serviceId, months:1, sub, service:SERVICES.find(s=>s.id===sub.serviceId) });
 });
 if (!sorted.length) {
-setStrategy({ plan: Array.from({ length: 12 }, (*, i) => ({ month: i, calendarMonth: (CURRENT_MONTH + i) % 12, type: “pause” })) });
+setStrategy({ plan: Array.from({length:12},(_,i)=>({ month:i, calMonth:(NOW_MONTH+i)%12, type:“pause” })) });
 return;
 }
 const plan = [];
-let slotIdx = 0;
+let slot = 0;
 for (const p of sorted) {
-for (let m = 0; m < p.months && slotIdx < 12; m++, slotIdx++) {
-plan.push({
-month: slotIdx,
-calendarMonth: (CURRENT_MONTH + slotIdx) % 12,
-type: “active”,
-serviceId: p.serviceId,
-svc: p.service,
-price: ((_a = p.sub) == null ? void 0 : _a.price) || p.service.price
-});
+for (let m=0; m<p.months && slot<12; m++,slot++) {
+plan.push({ month:slot, calMonth:(NOW_MONTH+slot)%12, type:“active”, serviceId:p.serviceId, svc:p.service, price:p.sub?.price||p.service.price });
 }
 }
 while (plan.length < 12) {
-plan.push({ month: plan.length, calendarMonth: (CURRENT_MONTH + plan.length) % 12, type: “pause” });
+plan.push({ month:plan.length, calMonth:(NOW_MONTH+plan.length)%12, type:“pause” });
 }
-plan.sort((a, b) => a.month - b.month);
+plan.sort((a,b)=>a.month-b.month);
 setStrategy({ plan });
 };
 
-if (!user.isPremium) return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 16px” } },
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Switch Strategy”),
-/* @**PURE** */ React.createElement(“p”, { style: { color: G.muted, fontSize: 14, marginTop: 4 } }, “Rotate smart, pay less”)
+if (!user.isPremium) return React.createElement(“div”,{className:“scr fu”},
+React.createElement(“div”,{style:{padding:“20px 0 16px”}},
+React.createElement(“h2”,{style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}},“Switch Strategy”),
+React.createElement(“p”,{style:{color:G.muted,fontSize:14,marginTop:4}},“Rotate smart, pay less”)
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “hero”, style: { marginBottom: 16 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginBottom: 6 } }, “You can save”),
-/* @**PURE** */ React.createElement(“div”, { className: “heroamt” }, fmt(savings.huidigJaar * 0.5)),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginTop: 6 } }, “per year (estimate)”)
+React.createElement(“div”,{className:“hero”,style:{marginBottom:16}},
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginBottom:6}},“You can save”),
+React.createElement(“div”,{className:“heroamt”}, fmt(savings.huidigJaar*0.5)),
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginTop:6}},“per year (estimate)”)
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 20, marginBottom: 14 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, marginBottom: 12 } }, “Comparison”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 8, fontSize: 14 } },
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “Current per year”),
-/* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700, color: G.danger } }, fmt(savings.huidigJaar))
+React.createElement(“div”,{className:“card”,style:{padding:20,marginBottom:14}},
+React.createElement(“p”,{style:{fontWeight:700,marginBottom:12}},“Comparison”),
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,marginBottom:8,fontSize:14}},
+React.createElement(“span”,{style:{color:G.muted}},“Current per year”),
+React.createElement(“span”,{style:{fontWeight:700,color:G.danger}}, fmt(savings.huidigJaar))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 14, fontSize: 14 } },
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “With Switch Strategy”),
-/* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700, color: G.accent } }, fmt(savings.huidigJaar * 0.5))
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,marginBottom:14,fontSize:14}},
+React.createElement(“span”,{style:{color:G.muted}},“With Switch Strategy”),
+React.createElement(“span”,{style:{fontWeight:700,color:G.accent}}, fmt(savings.huidigJaar*0.5))
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { background: “#00e5a010”, border: “1px solid #00e5a030”, borderRadius: 12, padding: 14, textAlign: “center” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 18, color: G.accent, fontWeight: 800 } }, fmt(savings.huidigJaar * 0.5), “ per year”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, marginTop: 4 } }, “Exact figures after upgrading”)
+React.createElement(“div”,{style:{background:”#00e5a010”,border:“1px solid #00e5a030”,borderRadius:12,padding:14,textAlign:“center”}},
+React.createElement(“p”,{style:{fontSize:18,color:G.accent,fontWeight:800}}, fmt(savings.huidigJaar*0.5)+” per year”),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted,marginTop:4}},“Exact figures after upgrading”)
 )
 ),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bprem”, style: { width: “100%”, padding: “16px” }, onClick: upgradePremium },
-/* @**PURE** */ React.createElement(Ico, { n: “crown” }), “ Upgrade to Premium \u2014 \u20AC10/year”
+React.createElement(“button”,{className:“btn bprem”,style:{width:“100%”,padding:“16px”},onClick:upgradePremium},
+React.createElement(Ico,{n:“crown”}), “ Upgrade to Premium — €10/year”
 )
 );
 
-const wlItems = watchlist.filter((w) => w.status !== “finished”);
-const byPlatform = SERVICES.map((s) => __spreadProps(__spreadValues({}, s), {
-items: wlItems.filter((w) => w.platform === s.id),
-totalMonths: wlItems.filter((w) => w.platform === s.id && w.type === “series”).reduce((sum, w) => {
-const totalEps = w.totalEpisodes || (w.episodes || 0) * (w.seasons || 1);
-const b = calcBinge(totalEps, w.epDuration || 45, w.evenings || 3);
-return sum + ((b == null ? void 0 : b.months) || 0);
-}, 0)
-})).filter((s) => s.items.length > 0);
+const wlItems = watchlist.filter(w=>w.status!==“finished”);
+const byPlatform = SERVICES.map(s=>__spreadProps(__spreadValues({},s),{
+items:wlItems.filter(w=>w.platform===s.id),
+totalMonths:wlItems.filter(w=>w.platform===s.id&&w.type===“series”).reduce((sum,w)=>{
+const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes||0)*(w.seasons||1);
+const b = calcBinge(totalEps, w.epDuration||45, w.evenings||3);
+return sum+(b?.months||0);
+},0)
+})).filter(s=>s.items.length>0);
 
-return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 16px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Switch Strategy”),
-/* @**PURE** */ React.createElement(“span”, { className: “tag tp”, style: { marginTop: 4, display: “inline-flex” } }, /* @**PURE** */ React.createElement(Ico, { n: “crown”, size: 12 }), “ Premium”)
+return React.createElement(“div”,{className:“scr fu”},
+React.createElement(“div”,{style:{padding:“20px 0 16px”,display:“flex”,alignItems:“center”,justifyContent:“space-between”}},
+React.createElement(“div”,null,
+React.createElement(“h2”,{style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}},“Switch Strategy”),
+React.createElement(“span”,{className:“tag tp”,style:{marginTop:4,display:“inline-flex”}}, React.createElement(Ico,{n:“crown”,size:12}), “ Premium”)
 ),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp bsm”, onClick: generateStrategy }, strategy ? “Recalculate” : “Generate Plan”)
+React.createElement(“button”,{className:“btn bp bsm”,onClick:generateStrategy}, strategy?“Recalculate”:“Generate Plan”)
 ),
-byPlatform.length > 0 && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 8, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(Ico, { n: “zap”, size: 16 }),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15 } }, “Watchlist analysis”)
+byPlatform.length>0 && React.createElement(“div”,{className:“card”,style:{padding:16,marginBottom:12}},
+React.createElement(“div”,{style:{display:“flex”,alignItems:“center”,gap:8,marginBottom:12}},
+React.createElement(Ico,{n:“zap”,size:16}),
+React.createElement(“p”,{style:{fontWeight:700,fontSize:15}},“Watchlist analysis”)
 ),
-byPlatform.map((s) => /* @**PURE** */ React.createElement(“div”, { key: s.id, style: { display: “flex”, alignItems: “center”, gap: 10, marginBottom: 10, padding: “10px 12px”, background: G.surface, borderRadius: 12 } },
-/* @**PURE** */ React.createElement(“div”, { style: { width: 36, height: 36, borderRadius: 10, background: s.color + “22”, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 20, flexShrink: 0 } }, s.icon),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, fontSize: 14 } }, s.name),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted } }, s.items.length, “ title”, s.items.length !== 1 ? “s” : “”)
+byPlatform.map(s =>
+React.createElement(“div”,{key:s.id,style:{display:“flex”,alignItems:“center”,gap:10,marginBottom:10,padding:“10px 12px”,background:G.surface,borderRadius:12}},
+React.createElement(“div”,{style:{width:36,height:36,borderRadius:10,background:s.color+“22”,display:“flex”,alignItems:“center”,justifyContent:“center”,fontSize:20,flexShrink:0}}, s.icon),
+React.createElement(“div”,{style:{flex:1}},
+React.createElement(“p”,{style:{fontWeight:600,fontSize:14}}, s.name),
+React.createElement(“p”,{style:{fontSize:12,color:G.muted}}, s.items.length+” title”+(s.items.length!==1?“s”:””))
 ),
-s.totalMonths > 0 && /* @**PURE** */ React.createElement(“div”, { style: { textAlign: “right” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, color: G.accent, fontSize: 14 } }, s.totalMonths, “ mo”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “needed”)
+s.totalMonths>0 && React.createElement(“div”,{style:{textAlign:“right”}},
+React.createElement(“p”,{style:{fontWeight:700,color:G.accent,fontSize:14}}, s.totalMonths+” mo”),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“needed”)
 )
-))
-),
-!strategy ? /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 40, textAlign: “center”, color: G.muted } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 40, marginBottom: 12 } }, “\u{1F504}”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, color: G.text, marginBottom: 6 } }, “Ready to save?”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 14 } }, ‘Click “Generate Plan” for a yearly schedule based on your watchlist and subscriptions.’)
-) : /* @**PURE** */ React.createElement(React.Fragment, null,
-/* @**PURE** */ React.createElement(“div”, { className: “hero”, style: { marginBottom: 14 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginBottom: 6 } }, “Annual savings”),
-/* @**PURE** */ React.createElement(“div”, { className: “heroamt” }, fmt(savings.besparing)),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginTop: 6 } }, fmt(savings.strategieJaar), “ with plan vs “, fmt(savings.huidigJaar), “ current per year”)
-),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, marginBottom: 14 } }, “Yearly schedule”),
-/* @**PURE** */ React.createElement(“div”, { className: “mrow” },
-strategy.plan.map((m) => {
-var _a, _b, _c, _d;
-return /* @**PURE** */ React.createElement(“div”, { key: m.month, className: “chip”, style: { background: m.type === “pause” ? G.border : (((_a = m.svc) == null ? void 0 : _a.color) || G.muted) + “25”, border: `1px solid ${m.type === "pause" ? G.border : (((_b = m.svc) == null ? void 0 : _b.color) || G.muted) + "50"}`, color: m.type === “pause” ? G.muted : G.text } },
-/* @**PURE** */ React.createElement(“div”, { style: { fontSize: 16 } }, m.type === “pause” ? “\u23F8” : ((_c = m.svc) == null ? void 0 : _c.icon) || “\u{1F4FA}”),
-/* @**PURE** */ React.createElement(“div”, { style: { marginTop: 4, fontWeight: 700 } }, MONTHS[m.calendarMonth]),
-/* @**PURE** */ React.createElement(“div”, { style: { fontSize: 9, marginTop: 2, opacity: 0.7 } }, m.type === “pause” ? “Pause” : (((_d = m.svc) == null ? void 0 : _d.name) || “”).split(” “)[0])
-);
-})
+)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { padding: 16 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, marginBottom: 12 } }, “Monthly breakdown”),
-strategy.plan.map((m, i) => {
-var _a, _b, _c;
-return /* @**PURE** */ React.createElement(“div”, { key: i, style: { display: “flex”, alignItems: “center”, gap: 12, padding: “10px 0”, borderBottom: `1px solid ${G.border}` } },
-/* @**PURE** */ React.createElement(“div”, { style: { width: 36, fontWeight: 700, color: G.muted, fontSize: 13 } }, MONTHS[m.calendarMonth]),
-/* @**PURE** */ React.createElement(“div”, { style: { fontSize: 20 } }, m.type === “pause” ? “\u23F8” : ((_a = m.svc) == null ? void 0 : _a.icon) || “\u{1F4FA}”),
-/* @**PURE** */ React.createElement(“div”, { style: { flex: 1 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, fontSize: 14 } }, m.type === “pause” ? “Pause month” : (_b = m.svc) == null ? void 0 : _b.name),
-m.type === “active” && (() => {
-const shows = wlItems.filter((w) => w.platform === m.serviceId);
+!strategy
+? React.createElement(“div”,{className:“card”,style:{padding:40,textAlign:“center”,color:G.muted}},
+React.createElement(“p”,{style:{fontSize:40,marginBottom:12}},“🔄”),
+React.createElement(“p”,{style:{fontWeight:600,color:G.text,marginBottom:6}},“Ready to save?”),
+React.createElement(“p”,{style:{fontSize:14}},‘Click “Generate Plan” for a yearly schedule based on your watchlist.’)
+)
+: React.createElement(React.Fragment,null,
+React.createElement(“div”,{className:“hero”,style:{marginBottom:14}},
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginBottom:6}},“Annual savings”),
+React.createElement(“div”,{className:“heroamt”}, fmt(savings.besparing)),
+React.createElement(“p”,{style:{fontSize:13,color:”#7abf9a”,marginTop:6}}, fmt(savings.strategieJaar)+” with plan vs “+fmt(savings.huidigJaar)+” current per year”)
+),
+React.createElement(“div”,{className:“card”,style:{padding:16,marginBottom:12}},
+React.createElement(“p”,{style:{fontWeight:700,marginBottom:14}},“Yearly schedule”),
+React.createElement(“div”,{className:“mrow”},
+strategy.plan.map(m =>
+React.createElement(“div”,{key:m.month,className:“chip”,style:{background:m.type===“pause”?G.border:(m.svc?.color||G.muted)+“25”,border:`1px solid ${m.type==="pause"?G.border:(m.svc?.color||G.muted)+"50"}`,color:m.type===“pause”?G.muted:G.text}},
+React.createElement(“div”,{style:{fontSize:16}}, m.type===“pause”?“⏸”:m.svc?.icon||“📺”),
+React.createElement(“div”,{style:{marginTop:4,fontWeight:700}}, MONTHS[m.calMonth]),
+React.createElement(“div”,{style:{fontSize:9,marginTop:2,opacity:0.7}}, m.type===“pause”?“Pause”:(m.svc?.name||””).split(” “)[0])
+)
+)
+)
+),
+React.createElement(“div”,{className:“card”,style:{padding:16}},
+React.createElement(“p”,{style:{fontWeight:700,marginBottom:12}},“Monthly breakdown”),
+strategy.plan.map((m,i) =>
+React.createElement(“div”,{key:i,style:{display:“flex”,alignItems:“center”,gap:12,padding:“10px 0”,borderBottom:`1px solid ${G.border}`}},
+React.createElement(“div”,{style:{width:36,fontWeight:700,color:G.muted,fontSize:13}}, MONTHS[m.calMonth]),
+React.createElement(“div”,{style:{fontSize:20}}, m.type===“pause”?“⏸”:m.svc?.icon||“📺”),
+React.createElement(“div”,{style:{flex:1}},
+React.createElement(“p”,{style:{fontWeight:600,fontSize:14}}, m.type===“pause”?“Pause month”:m.svc?.name),
+m.type===“active” && (()=>{
+const shows = wlItems.filter(w=>w.platform===m.serviceId);
 if (!shows.length) return null;
-return /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, marginTop: 2 } }, shows.map((s) => s.title).join(”, “));
+return React.createElement(“p”,{style:{fontSize:11,color:G.muted,marginTop:2}}, shows.map(s=>s.title).join(”, “));
 })()
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { fontWeight: 700, color: m.type === “pause” ? G.accent : G.text } }, m.type === “pause” ? “\u20AC0” : `\u20AC${(_c = m.price) == null ? void 0 : _c.toFixed(2)}`)
-);
-}),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, padding: “12px 0 0”, fontWeight: 800 } },
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “Total with Switch Strategy”),
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.accent } }, fmt(savings.strategieJaar))
+React.createElement(“div”,{style:{fontWeight:700,color:m.type===“pause”?G.accent:G.text}}, m.type===“pause”?“€0”:“€”+m.price?.toFixed(2))
+)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, padding: “8px 0 0” } },
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.muted, fontSize: 13 } }, “Savings vs. current”),
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.accent, fontSize: 13, fontWeight: 700 } }, fmt(savings.besparing))
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,padding:“12px 0 0”,fontWeight:800}},
+React.createElement(“span”,{style:{color:G.muted}},“Total with Switch Strategy”),
+React.createElement(“span”,{style:{color:G.accent}}, fmt(savings.strategieJaar))
+),
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,padding:“8px 0 0”}},
+React.createElement(“span”,{style:{color:G.muted,fontSize:13}},“Savings vs. current”),
+React.createElement(“span”,{style:{color:G.accent,fontSize:13,fontWeight:700}}, fmt(savings.besparing))
 )
 )
 )
 );
 }
 
+// ─── SETTINGS SCREEN ─────────────────────────────────────────────────────────
 function SettingsScreen({ user, setUser, notifs, setNotifs, upgradePremium, openPwSheet }) {
-const [showPwForm, setShowPwForm] = useState(false);
-const [pwForm, setPwForm] = useState({ current: “”, newPw: “”, confirm: “” });
-const [pwMsg, setPwMsg] = useState(””);
-const [showPayment, setShowPayment] = useState(false);
-const [notifEnabled, setNotifEnabled] = useState((notifs == null ? void 0 : notifs.enabled) !== false);
+const [showPwForm,   setShowPwForm]   = useState(false);
+const [pwForm,       setPwForm]       = useState({ current:””, newPw:””, confirm:”” });
+const [pwMsg,        setPwMsg]        = useState(””);
+const [showPayment,  setShowPayment]  = useState(false);
+const [notifEnabled, setNotifEnabled] = useState(notifs?.enabled !== false);
+
 const shareApp = () => {
-var _a;
 if (navigator.share) {
-navigator.share({ title: “StreamSwitch”, text: “Manage your streaming subscriptions smarter!”, url: “https://streamswitcher.vercel.app” });
+navigator.share({ title:“StreamSwitch”, text:“Manage your streaming subscriptions smarter!”, url:“https://streamswitcher.vercel.app” });
 } else {
-(_a = navigator.clipboard) == null ? void 0 : _a.writeText(“https://streamswitcher.vercel.app”);
+navigator.clipboard?.writeText(“https://streamswitcher.vercel.app”);
 alert(“Link copied to clipboard!”);
 }
 };
@@ -981,284 +924,312 @@ const savePw = () => {
 if (!pwForm.current) return setPwMsg(“Enter your current password.”);
 if (pwForm.newPw.length < 6) return setPwMsg(“New password must be at least 6 characters.”);
 if (pwForm.newPw !== pwForm.confirm) return setPwMsg(“Passwords do not match.”);
-setPwMsg(”\u2705 Password changed successfully!”);
-setPwForm({ current: “”, newPw: “”, confirm: “” });
-setTimeout(() => { setPwMsg(””); setShowPwForm(false); }, 2e3);
+setPwMsg(“✅ Password changed successfully!”);
+setPwForm({ current:””, newPw:””, confirm:”” });
+setTimeout(() => { setPwMsg(””); setShowPwForm(false); }, 2000);
 };
 const toggleNotifs = async () => {
 if (!notifEnabled) {
 if (“Notification” in window) {
 const perm = await Notification.requestPermission();
-if (perm === “granted”) {
+if (perm===“granted”) {
 setNotifEnabled(true);
-setNotifs((n) => __spreadProps(__spreadValues({}, n), { enabled: true }));
-new Notification(“StreamSwitch”, { body: “Notifications enabled! \u{1F389}”, icon: “/icon.png” });
-} else {
-alert(“Please allow notifications in your browser settings.”);
-}
+setNotifs(n => __spreadProps(__spreadValues({},n),{enabled:true}));
+new Notification(“StreamSwitch”,{body:“Notifications enabled! 🎉”,icon:”/icon.png”});
+} else { alert(“Please allow notifications in your browser settings.”); }
 }
 } else {
 setNotifEnabled(false);
-setNotifs((n) => __spreadProps(__spreadValues({}, n), { enabled: false }));
+setNotifs(n => __spreadProps(__spreadValues({},n),{enabled:false}));
 }
 };
-return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 16px” } },
-/* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Settings”)
+
+return React.createElement(“div”,{className:“scr fu”},
+React.createElement(“div”,{style:{padding:“20px 0 16px”}},
+React.createElement(“h2”,{style:{fontSize:22,fontWeight:800,letterSpacing:”-0.5px”}},“Settings”)
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14 } },
-/* @**PURE** */ React.createElement(“div”, { style: { padding: “16px 16px 12px” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 12 } }, “Account”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Email”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, marginBottom: 10 } }, user.email),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Plan”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, color: user.isPremium ? G.premium : G.text } }, user.isPremium ? “\u2B50 Premium” : “Free”)
+React.createElement(“div”,{className:“card”,style:{marginBottom:14}},
+React.createElement(“div”,{style:{padding:“16px 16px 12px”}},
+React.createElement(“p”,{style:{fontSize:11,color:G.muted,fontWeight:700,textTransform:“uppercase”,letterSpacing:“1px”,marginBottom:12}},“Account”),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Email”),
+React.createElement(“p”,{style:{fontWeight:600,marginBottom:10}}, user.email),
+React.createElement(“p”,{style:{fontSize:11,color:G.muted}},“Plan”),
+React.createElement(“p”,{style:{fontWeight:600,color:user.isPremium?G.premium:G.text}}, user.isPremium?“⭐ Premium”:“Free”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { height: 1, background: G.border } }),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { margin: 12, width: “calc(100% - 24px)”, justifyContent: “flex-start”, gap: 10 }, onClick: () => setShowPwForm((v) => !v) }, “\u{1F511} Change password”),
-showPwForm && /* @**PURE** */ React.createElement(“div”, { style: { padding: “0 16px 16px” } },
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “password”, placeholder: “Current password”, value: pwForm.current, onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { current: e.target.value })), style: { marginBottom: 8 } }),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “password”, placeholder: “New password”, value: pwForm.newPw, onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { newPw: e.target.value })), style: { marginBottom: 8 } }),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “password”, placeholder: “Confirm new password”, value: pwForm.confirm, onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { confirm: e.target.value })), style: { marginBottom: 8 } }),
-pwMsg && /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: pwMsg.includes(”\u2705”) ? G.accent : G.danger, marginBottom: 8 } }, pwMsg),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%” }, onClick: savePw }, “Save password”)
+React.createElement(“div”,{style:{height:1,background:G.border}}),
+React.createElement(“button”,{className:“btn bg”,style:{margin:12,width:“calc(100% - 24px)”,justifyContent:“flex-start”,gap:10},onClick:()=>setShowPwForm(v=>!v)},“🔑 Change password”),
+showPwForm && React.createElement(“div”,{style:{padding:“0 16px 16px”}},
+React.createElement(“input”,{className:“inp”,type:“password”,placeholder:“Current password”,value:pwForm.current,onChange:e=>setPwForm(f=>__spreadProps(__spreadValues({},f),{current:e.target.value})),style:{marginBottom:8}}),
+React.createElement(“input”,{className:“inp”,type:“password”,placeholder:“New password”,value:pwForm.newPw,onChange:e=>setPwForm(f=>__spreadProps(__spreadValues({},f),{newPw:e.target.value})),style:{marginBottom:8}}),
+React.createElement(“input”,{className:“inp”,type:“password”,placeholder:“Confirm new password”,value:pwForm.confirm,onChange:e=>setPwForm(f=>__spreadProps(__spreadValues({},f),{confirm:e.target.value})),style:{marginBottom:8}}),
+pwMsg && React.createElement(“p”,{style:{fontSize:13,color:pwMsg.includes(“✅”)?G.accent:G.danger,marginBottom:8}}, pwMsg),
+React.createElement(“button”,{className:“btn bp”,style:{width:“100%”},onClick:savePw},“Save password”)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14, padding: “16px” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 12 } }, “Notifications”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, fontSize: 15 } }, “\u{1F514} Push notifications”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, “Renewal reminders & updates”)
+React.createElement(“div”,{className:“card”,style:{marginBottom:14,padding:“16px”}},
+React.createElement(“p”,{style:{fontSize:11,color:G.muted,fontWeight:700,textTransform:“uppercase”,letterSpacing:“1px”,marginBottom:12}},“Notifications”),
+React.createElement(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”}},
+React.createElement(“div”,null,
+React.createElement(“p”,{style:{fontWeight:600,fontSize:15}},“🔔 Push notifications”),
+React.createElement(“p”,{style:{fontSize:12,color:G.muted,marginTop:2}},“Renewal reminders & updates”)
 ),
-/* @**PURE** */ React.createElement(Toggle, { value: notifEnabled, onChange: toggleNotifs })
+React.createElement(Toggle,{value:notifEnabled,onChange:toggleNotifs})
 )
 ),
-!user.isPremium && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14, padding: 16, background: “linear-gradient(135deg,#1a1400,#0a0a00)”, border: “1px solid #f7c94833” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.premium, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 8 } }, “Premium”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 16, marginBottom: 4 } }, “Unlock Switch Strategy”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: G.muted, marginBottom: 12 } }, “Save up to 50% on your subscriptions with smart rotation planning.”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bprem”, style: { width: “100%” }, onClick: () => setShowPayment(true) }, “\u2728 Upgrade to Premium \u2014 \u20AC10/year”)
+!user.isPremium && React.createElement(“div”,{className:“card”,style:{marginBottom:14,padding:16,background:“linear-gradient(135deg,#1a1400,#0a0a00)”,border:“1px solid #f7c94833”}},
+React.createElement(“p”,{style:{fontSize:11,color:G.premium,fontWeight:700,textTransform:“uppercase”,letterSpacing:“1px”,marginBottom:8}},“Premium”),
+React.createElement(“p”,{style:{fontWeight:700,fontSize:16,marginBottom:4}},“Unlock Switch Strategy”),
+React.createElement(“p”,{style:{fontSize:13,color:G.muted,marginBottom:12}},“Save up to 50% on your subscriptions with smart rotation planning.”),
+React.createElement(“button”,{className:“btn bprem”,style:{width:“100%”},onClick:()=>setShowPayment(true)},“✨ Upgrade to Premium — €10/year”)
 ),
-showPayment && /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && setShowPayment(false) },
-/* @**PURE** */ React.createElement(“div”, { className: “sh” },
-/* @**PURE** */ React.createElement(“div”, { className: “hndl” }),
-/* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 20, marginBottom: 4 } }, “Upgrade to Premium”),
-/* @**PURE** */ React.createElement(“p”, { style: { color: G.muted, fontSize: 13, marginBottom: 20 } }, “One-time payment, lifetime access”),
-/* @**PURE** */ React.createElement(“div”, { style: { background: G.card, borderRadius: 14, padding: 16, marginBottom: 16 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 8 } },
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “StreamSwitch Premium”),
-/* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700 } }, “\u20AC10.00”)
+showPayment && React.createElement(“div”,{className:“ov”,onClick:e=>e.target===e.currentTarget&&setShowPayment(false)},
+React.createElement(“div”,{className:“sh”},
+React.createElement(“div”,{className:“hndl”}),
+React.createElement(“h3”,{style:{fontWeight:800,fontSize:20,marginBottom:4}},“Upgrade to Premium”),
+React.createElement(“p”,{style:{color:G.muted,fontSize:13,marginBottom:20}},“One-time payment, lifetime access”),
+React.createElement(“div”,{style:{background:G.card,borderRadius:14,padding:16,marginBottom:16}},
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”,marginBottom:8}},
+React.createElement(“span”,{style:{color:G.muted}},“StreamSwitch Premium”),
+React.createElement(“span”,{style:{fontWeight:700}},“€10.00”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “VAT”),
-/* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700 } }, “\u20AC0.00”)
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”}},
+React.createElement(“span”,{style:{color:G.muted}},“VAT”),
+React.createElement(“span”,{style:{fontWeight:700}},“€0.00”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { height: 1, background: G.border, margin: “12px 0” } }),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between” } },
-/* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700 } }, “Total”),
-/* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 800, color: G.accent } }, “\u20AC10.00”)
+React.createElement(“div”,{style:{height:1,background:G.border,margin:“12px 0”}}),
+React.createElement(“div”,{style:{display:“flex”,justifyContent:“space-between”}},
+React.createElement(“span”,{style:{fontWeight:700}},“Total”),
+React.createElement(“span”,{style:{fontWeight:800,color:G.accent}},“€10.00”)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { background: G.surface, borderRadius: 14, padding: 16, marginBottom: 16 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginBottom: 8 } }, “\u{1F4B3} Card number”),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “1234 5678 9012 3456”, style: { marginBottom: 8 } }),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8 } },
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “MM/YY”, style: { flex: 1 } }),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “CVV”, style: { flex: 1 } })
+React.createElement(“div”,{style:{background:G.surface,borderRadius:14,padding:16,marginBottom:16}},
+React.createElement(“p”,{style:{fontSize:12,color:G.muted,marginBottom:8}},“💳 Card number”),
+React.createElement(“input”,{className:“inp”,placeholder:“1234 5678 9012 3456”,style:{marginBottom:8}}),
+React.createElement(“div”,{style:{display:“flex”,gap:8}},
+React.createElement(“input”,{className:“inp”,placeholder:“MM/YY”,style:{flex:1}}),
+React.createElement(“input”,{className:“inp”,placeholder:“CVV”,style:{flex:1}})
 )
 ),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bprem”, style: { width: “100%”, padding: 16, marginBottom: 8 }, onClick: () => { upgradePremium(); setShowPayment(false); alert(”\u{1F389} Welcome to Premium! (Demo mode \u2014 no real payment processed)”); } }, “Pay \u20AC10.00”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%” }, onClick: () => setShowPayment(false) }, “Cancel”),
-/* @**PURE** */ React.createElement(“p”, { style: { textAlign: “center”, fontSize: 11, color: G.muted, marginTop: 12 } }, “\u{1F512} Demo mode \u2014 no real payment processed”)
+React.createElement(“button”,{className:“btn bprem”,style:{width:“100%”,padding:16,marginBottom:8},onClick:()=>{ upgradePremium(); setShowPayment(false); alert(“🎉 Welcome to Premium! (Demo mode — no real payment processed)”); }},“Pay €10.00”),
+React.createElement(“button”,{className:“btn bg”,style:{width:“100%”},onClick:()=>setShowPayment(false)},“Cancel”),
+React.createElement(“p”,{style:{textAlign:“center”,fontSize:11,color:G.muted,marginTop:12}},“🔒 Demo mode — no real payment processed”)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14, padding: 16 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 12 } }, “Share”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%”, justifyContent: “flex-start”, gap: 10 }, onClick: shareApp }, “\u{1F4E4} Share StreamSwitch”)
+React.createElement(“div”,{className:“card”,style:{marginBottom:14,padding:16}},
+React.createElement(“p”,{style:{fontSize:11,color:G.muted,fontWeight:700,textTransform:“uppercase”,letterSpacing:“1px”,marginBottom:12}},“Share”),
+React.createElement(“button”,{className:“btn bg”,style:{width:“100%”,justifyContent:“flex-start”,gap:10},onClick:shareApp},“📤 Share StreamSwitch”)
 ),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bd”, style: { width: “100%”, marginTop: 4 }, onClick: () => { setUser(null); LS.set(“ss_user”, null); } }, “Sign out”),
-/* @**PURE** */ React.createElement(“p”, { style: { textAlign: “center”, fontSize: 11, color: G.muted, marginTop: 14 } }, “StreamSwitch v3.1”)
+React.createElement(“button”,{className:“btn bd”,style:{width:“100%”,marginTop:4},onClick:()=>{ setUser(null); LS.set(“ss_user”,null); }},“Sign out”),
+React.createElement(“p”,{style:{textAlign:“center”,fontSize:11,color:G.muted,marginTop:14}},“StreamSwitch v3.1”)
 );
 }
 
+// ─── SUB SHEET ────────────────────────────────────────────────────────────────
 function SubSheet({ editingSub, subForm, setSubForm, saveSub, onClose }) {
-const upd = (k, v) => setSubForm((f) => __spreadProps(__spreadValues({}, f), { [k]: v }));
-return /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && onClose() },
-/* @**PURE** */ React.createElement(“div”, { className: “sh” },
-/* @**PURE** */ React.createElement(“div”, { className: “hndl” }),
-/* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 18, marginBottom: 18 } }, editingSub ? “Edit subscription” : “Add subscription”),
-!editingSub && /* @**PURE** */ React.createElement(“div”, { style: { marginBottom: 18 } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, fontWeight: 600, marginBottom: 10 } }, “Choose a service”),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexWrap: “wrap”, gap: 8 } },
-SERVICES.map((p) => /* @**PURE** */ React.createElement(“button”, {
-key: p.id,
-className: “btn bsm”,
-onClick: () => setSubForm((f) => __spreadProps(__spreadValues({}, f), { serviceId: p.id, name: p.name, price: String(p.price), color: p.color, icon: p.icon, url: p.url })),
-style: { background: subForm.serviceId === p.id ? p.color : G.border, color: subForm.serviceId === p.id ? “white” : G.text }
-}, p.icon, “ “, p.name))
+const upd = (k,v) => setSubForm(f => __spreadProps(__spreadValues({},f),{[k]:v}));
+return React.createElement(“div”,{className:“ov”,onClick:e=>e.target===e.currentTarget&&onClose()},
+React.createElement(“div”,{className:“sh”},
+React.createElement(“div”,{className:“hndl”}),
+React.createElement(“h3”,{style:{fontWeight:800,fontSize:18,marginBottom:18}}, editingSub?“Edit subscription”:“Add subscription”),
+!editingSub && React.createElement(“div”,{style:{marginBottom:18}},
+React.createElement(“p”,{style:{fontSize:12,color:G.muted,fontWeight:600,marginBottom:10}},“Choose a service”),
+React.createElement(“div”,{style:{display:“flex”,flexWrap:“wrap”,gap:8}},
+SERVICES.map(p =>
+React.createElement(“button”,{key:p.id,className:“btn bsm”,
+onClick:()=>setSubForm(f=>__spreadProps(__spreadValues({},f),{serviceId:p.id,name:p.name,price:String(p.price),color:p.color,icon:p.icon,url:p.url})),
+style:{background:subForm.serviceId===p.id?p.color:G.border,color:subForm.serviceId===p.id?“white”:G.text}
+}, p.icon+” “+p.name)
+)
 )
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexDirection: “column”, gap: 13 } },
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Name”),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “Netflix”, value: subForm.name, onChange: (e) => upd(“name”, e.target.value) })
+React.createElement(“div”,{style:{display:“flex”,flexDirection:“column”,gap:13}},
+React.createElement(“div”,null,
+React.createElement(“label”,{className:“lbl”},“Name”),
+React.createElement(“input”,{className:“inp”,placeholder:“Netflix”,value:subForm.name,onChange:e=>upd(“name”,e.target.value)})
 ),
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Monthly price (\u20AC)”),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “text”, inputMode: “decimal”, placeholder: “17.99”, value: subForm.price, onChange: (e) => upd(“price”, e.target.value) })
+React.createElement(“div”,null,
+React.createElement(“label”,{className:“lbl”},“Monthly price (€)”),
+React.createElement(“input”,{className:“inp”,type:“text”,inputMode:“decimal”,placeholder:“17.99”,value:subForm.price,onChange:e=>upd(“price”,e.target.value)})
 ),
-/* @**PURE** */ React.createElement(“div”, null,
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Renewal date”),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “date”, value: subForm.renewalDate, onChange: (e) => upd(“renewalDate”, e.target.value) })
+React.createElement(“div”,null,
+React.createElement(“label”,{className:“lbl”},“Renewal date”),
+React.createElement(“input”,{className:“inp”,type:“date”,value:subForm.renewalDate,onChange:e=>upd(“renewalDate”,e.target.value)})
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “space-between”, padding: “12px 14px”, background: G.surface, borderRadius: 11, border: `1px solid ${G.border}` } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600 } }, “Auto-renew”),
-/* @**PURE** */ React.createElement(Toggle, { value: subForm.autoRenew, onChange: (v) => upd(“autoRenew”, v) })
+React.createElement(“div”,{style:{display:“flex”,alignItems:“center”,justifyContent:“space-between”,padding:“12px 14px”,background:G.surface,borderRadius:11,border:`1px solid ${G.border}`}},
+React.createElement(“p”,{style:{fontWeight:600}},“Auto-renew”),
+React.createElement(Toggle,{value:subForm.autoRenew,onChange:v=>upd(“autoRenew”,v)})
 ),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: saveSub }, editingSub ? “Save” : “Add”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%” }, onClick: onClose }, “Cancel”)
+React.createElement(“button”,{className:“btn bp”,style:{width:“100%”,padding:“14px”},onClick:saveSub}, editingSub?“Save”:“Add”),
+React.createElement(“button”,{className:“btn bg”,style:{width:“100%”},onClick:onClose},“Cancel”)
 )
 )
 );
 }
 
+// ─── PASSWORD SHEET ───────────────────────────────────────────────────────────
 function PwSheet({ user, setUser, onClose }) {
-const [form, setForm] = useState({ current: “”, next: “”, confirm: “” });
-const [err, setErr] = useState(””);
-const [ok, setOk] = useState(false);
-const [show, setShow] = useState({ current: false, next: false, confirm: false });
+const [form, setForm] = useState({ current:””, next:””, confirm:”” });
+const [err,  setErr]  = useState(””);
+const [ok,   setOk]   = useState(false);
+const [show, setShow] = useState({ current:false, next:false, confirm:false });
 const save = () => {
 setErr(””);
-if (!form.current || !form.next || !form.confirm) { setErr(“Please fill in all fields.”); return; }
-if (form.current !== user.password) { setErr(“Current password is incorrect.”); return; }
-if (form.next.length < 6) { setErr(“Minimum 6 characters.”); return; }
-if (form.next !== form.confirm) { setErr(“Passwords do not match.”); return; }
-setUser((u) => { const n = __spreadProps(__spreadValues({}, u), { password: form.next }); LS.set(“ss_user”, n); return n; });
+if (!form.current||!form.next||!form.confirm) { setErr(“Please fill in all fields.”); return; }
+if (form.current!==user.password)             { setErr(“Current password is incorrect.”); return; }
+if (form.next.length<6)                       { setErr(“Minimum 6 characters.”); return; }
+if (form.next!==form.confirm)                 { setErr(“Passwords do not match.”); return; }
+setUser(u => { const n=__spreadProps(__spreadValues({},u),{password:form.next}); LS.set(“ss_user”,n); return n; });
 setOk(true);
-setTimeout(() => onClose(), 1600);
+setTimeout(()=>onClose(), 1600);
 };
-return /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && onClose() },
-/* @**PURE** */ React.createElement(“div”, { className: “sh” },
-/* @**PURE** */ React.createElement(“div”, { className: “hndl” }),
-/* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 18, marginBottom: 20 } }, “Change password”),
-ok ? /* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, padding: “30px 0” } },
-/* @**PURE** */ React.createElement(“p”, { style: { fontSize: 52, marginBottom: 12 } }, “\u2705”),
-/* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, color: G.accent, fontSize: 18 } }, “Password changed!”)
-) : /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexDirection: “column”, gap: 13 } },
-[{ k: “current”, l: “Current password”, p: “\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022”, a: “current-password” }, { k: “next”, l: “New password”, p: “Minimum 6 characters”, a: “new-password” }, { k: “confirm”, l: “Confirm password”, p: “Repeat password”, a: “new-password” }].map(({ k, l, p, a }) => /* @**PURE** */ React.createElement(“div”, { key: k },
-/* @**PURE** */ React.createElement(“label”, { className: “lbl” }, l),
-/* @**PURE** */ React.createElement(“div”, { className: “iw” },
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: show[k] ? “text” : “password”, placeholder: p, autoComplete: a, value: form[k], onChange: (e) => setForm((f) => __spreadProps(__spreadValues({}, f), { [k]: e.target.value })) }),
-/* @**PURE** */ React.createElement(“button”, { className: “eyeb”, onClick: () => setShow((v) => __spreadProps(__spreadValues({}, v), { [k]: !v[k] })), tabIndex: -1 }, /* @**PURE** */ React.createElement(Ico, { n: show[k] ? “eyeoff” : “eye” }))
+return React.createElement(“div”,{className:“ov”,onClick:e=>e.target===e.currentTarget&&onClose()},
+React.createElement(“div”,{className:“sh”},
+React.createElement(“div”,{className:“hndl”}),
+React.createElement(“h3”,{style:{fontWeight:800,fontSize:18,marginBottom:20}},“Change password”),
+ok
+? React.createElement(“div”,{style:{textAlign:“center”,padding:“30px 0”}},
+React.createElement(“p”,{style:{fontSize:52,marginBottom:12}},“✅”),
+React.createElement(“p”,{style:{fontWeight:700,color:G.accent,fontSize:18}},“Password changed!”)
 )
-)),
-err && /* @**PURE** */ React.createElement(“p”, { style: { color: G.danger, fontSize: 13, background: “#2a1020”, padding: “10px 14px”, borderRadius: 10 } }, err),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: save }, “Save”),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%” }, onClick: onClose }, “Cancel”)
+: React.createElement(“div”,{style:{display:“flex”,flexDirection:“column”,gap:13}},
+[{k:“current”,l:“Current password”,p:”••••••••”,a:“current-password”},{k:“next”,l:“New password”,p:“Minimum 6 characters”,a:“new-password”},{k:“confirm”,l:“Confirm password”,p:“Repeat password”,a:“new-password”}].map(({k,l,p,a}) =>
+React.createElement(“div”,{key:k},
+React.createElement(“label”,{className:“lbl”},l),
+React.createElement(“div”,{className:“iw”},
+React.createElement(“input”,{className:“inp”,type:show[k]?“text”:“password”,placeholder:p,autoComplete:a,value:form[k],onChange:e=>setForm(f=>__spreadProps(__spreadValues({},f),{[k]:e.target.value}))}),
+React.createElement(“button”,{className:“eyeb”,onClick:()=>setShow(v=>__spreadProps(__spreadValues({},v),{[k]:!v[k]})),tabIndex:-1},
+React.createElement(Ico,{n:show[k]?“eyeoff”:“eye”})
+)
+)
+)
+),
+err && React.createElement(“p”,{style:{color:G.danger,fontSize:13,background:”#2a1020”,padding:“10px 14px”,borderRadius:10}}, err),
+React.createElement(“button”,{className:“btn bp”,style:{width:“100%”,padding:“14px”},onClick:save},“Save”),
+React.createElement(“button”,{className:“btn bg”,style:{width:“100%”},onClick:onClose},“Cancel”)
 )
 )
 );
 }
 
+// ─── ROOT APP ─────────────────────────────────────────────────────────────────
 function StreamSwitch() {
-const [user, setUser] = useState(() => LS.get(“ss_user”, null));
-const [authMode, setAuthMode] = useState(“login”);
-const [authEmail, setAuthEmail] = useState(””);
-const [authPass, setAuthPass] = useState(””);
-const [authError, setAuthError] = useState(””);
+const [user,         setUser]         = useState(() => LS.get(“ss_user”, null));
+const [authMode,     setAuthMode]     = useState(“login”);
+const [authEmail,    setAuthEmail]    = useState(””);
+const [authPass,     setAuthPass]     = useState(””);
+const [authError,    setAuthError]    = useState(””);
 const [showAuthPass, setShowAuthPass] = useState(false);
-const [tab, setTab] = useState(“dashboard”);
-const [subs, setSubs] = useState(() => LS.get(“ss_subs”, DEF_SUBS));
+const [tab,          setTab]          = useState(“dashboard”);
+const [subs,         setSubs]         = useState(() => LS.get(“ss_subs”, DEF_SUBS));
 const [showSubSheet, setShowSubSheet] = useState(false);
-const [editingSub, setEditingSub] = useState(null);
-const [subForm, setSubForm] = useState({ serviceId: “”, name: “”, price: “”, renewalDate: addDays(30), autoRenew: true, color: “#00e5a0”, icon: “\u{1F4FA}”, url: “” });
-const [watchlist, setWatchlist] = useState(() => LS.get(“ss_watchlist”, DEF_WL));
-const [strategy, setStrategy] = useState(null);
-const [notifs, setNotifs] = useState(() => LS.get(“ss_notifs”, true));
-const [showPwSheet, setShowPwSheet] = useState(false);
-const totalMonthly = useMemo(() => subs.reduce((s, a) => s + a.price, 0), [subs]);
-const savings = useMemo(() => calcSavings(subs, strategy == null ? void 0 : strategy.plan), [subs, strategy]);
+const [editingSub,   setEditingSub]   = useState(null);
+const [subForm,      setSubForm]      = useState({ serviceId:””, name:””, price:””, renewalDate:addDays(30), autoRenew:true, color:”#00e5a0”, icon:“📺”, url:”” });
+const [watchlist,    setWatchlist]    = useState(() => LS.get(“ss_watchlist”, DEF_WL));
+const [strategy,     setStrategy]     = useState(null);
+const [notifs,       setNotifs]       = useState(() => LS.get(“ss_notifs”, true));
+const [showPwSheet,  setShowPwSheet]  = useState(false);
+
+const totalMonthly = useMemo(() => subs.reduce((s,a) => s+a.price, 0), [subs]);
+const savings      = useMemo(() => calcSavings(subs, strategy?.plan), [subs, strategy]);
+
 const getStatus = (sub) => {
-const wlCount = watchlist.filter((w) => w.platform === sub.serviceId && w.status !== “finished”).length;
-if (!sub.autoRenew) return { label: “Inactive”, cls: “ti”, dot: G.muted };
-if (daysLeft(sub.renewalDate) <= 30 && wlCount === 0) return { label: “Low usage”, cls: “tl”, dot: G.warn };
-return { label: “Active”, cls: “ta”, dot: G.accent };
+const wlCount = watchlist.filter(w=>w.platform===sub.serviceId && w.status!==“finished”).length;
+if (!sub.autoRenew)                              return { label:“Inactive”,  cls:“ti”, dot:G.muted };
+if (daysLeft(sub.renewalDate)<=30 && wlCount===0) return { label:“Low usage”, cls:“tl”, dot:G.warn };
+return { label:“Active”, cls:“ta”, dot:G.accent };
 };
-const upgradePremium = () => setUser((u) => { const n = __spreadProps(__spreadValues({}, u), { isPremium: true }); LS.set(“ss_user”, n); return n; });
+
+const upgradePremium = () => setUser(u => { const n=__spreadProps(__spreadValues({},u),{isPremium:true}); LS.set(“ss_user”,n); return n; });
+
 const handleAuth = () => {
-if (!authEmail.trim() || !authPass.trim()) { setAuthError(“Please fill in all fields.”); return; }
-if (authPass.length < 6) { setAuthError(“Password must be at least 6 characters.”); return; }
-const u = { id: genId(), email: authEmail, isPremium: false, password: authPass };
-setUser(u);
-LS.set(“ss_user”, u);
+if (!authEmail.trim()||!authPass.trim()) { setAuthError(“Please fill in all fields.”); return; }
+if (authPass.length<6) { setAuthError(“Password must be at least 6 characters.”); return; }
+const u = { id:genId(), email:authEmail, isPremium:false, password:authPass };
+setUser(u); LS.set(“ss_user”,u);
 };
+
 const openAddSub = () => {
 setEditingSub(null);
-setSubForm({ serviceId: “”, name: “”, price: “”, renewalDate: addDays(30), autoRenew: true, color: “#00e5a0”, icon: “\u{1F4FA}”, url: “” });
+setSubForm({ serviceId:””, name:””, price:””, renewalDate:addDays(30), autoRenew:true, color:”#00e5a0”, icon:“📺”, url:”” });
 setShowSubSheet(true);
 };
 const openEditSub = (s) => {
 setEditingSub(s);
-setSubForm(__spreadProps(__spreadValues({}, s), { price: String(s.price) }));
+setSubForm(__spreadProps(__spreadValues({},s),{price:String(s.price)}));
 setShowSubSheet(true);
 };
 const saveSub = () => {
-if (!subForm.name.trim() || !subForm.price) return;
-const preset = SERVICES.find((p) => p.id === subForm.serviceId);
-const s = { id: (editingSub == null ? void 0 : editingSub.id) || genId(), serviceId: subForm.serviceId, name: subForm.name, price: parseFloat(subForm.price.replace(”,”, “.”)), renewalDate: subForm.renewalDate, autoRenew: subForm.autoRenew, color: (preset == null ? void 0 : preset.color) || subForm.color, icon: (preset == null ? void 0 : preset.icon) || subForm.icon, url: (preset == null ? void 0 : preset.url) || subForm.url };
-setSubs((prev) => { const n = editingSub ? prev.map((x) => x.id === editingSub.id ? s : x) : […prev, s]; LS.set(“ss_subs”, n); return n; });
-setShowSubSheet(false);
-setStrategy(null);
+if (!subForm.name.trim()||!subForm.price) return;
+const preset = SERVICES.find(p=>p.id===subForm.serviceId);
+const s = {
+id:(editingSub?.id)||genId(), serviceId:subForm.serviceId, name:subForm.name,
+price:parseFloat(subForm.price.replace(”,”,”.”)), renewalDate:subForm.renewalDate,
+autoRenew:subForm.autoRenew, color:preset?.color||subForm.color,
+icon:preset?.icon||subForm.icon, url:preset?.url||subForm.url
 };
+setSubs(prev=>{ const n=editingSub?prev.map(x=>x.id===editingSub.id?s:x):[…prev,s]; LS.set(“ss_subs”,n); return n; });
+setShowSubSheet(false); setStrategy(null);
+};
+
 const NAV = [
-{ id: “dashboard”, label: “Dashboard”, icon: “dashboard” },
-{ id: “subs”, label: “Subscriptions”, icon: “subs” },
-{ id: “watchlist”, label: “Watchlist”, icon: “list” },
-{ id: “news”, label: “Suggestions”, icon: “movie” },
-{ id: “switch”, label: “Switch”, icon: “switch” }
+{ id:“dashboard”, label:“Dashboard”,     icon:“dashboard” },
+{ id:“subs”,      label:“Subscriptions”, icon:“subs”      },
+{ id:“watchlist”, label:“Watchlist”,     icon:“list”      },
+{ id:“news”,      label:“Suggestions”,   icon:“movie”     },
+{ id:“switch”,    label:“Switch”,        icon:“switch”    }
 ];
-if (!user) return /* @**PURE** */ React.createElement(“div”, { style: { minHeight: “100vh”, background: G.bg, display: “flex”, flexDirection: “column”, alignItems: “center”, justifyContent: “center”, padding: 24 } },
-/* @**PURE** */ React.createElement(“style”, null, CSS),
-/* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, marginBottom: 36 } },
-/* @**PURE** */ React.createElement(“div”, { style: { fontSize: 52, marginBottom: 10 } }, “\u{1F4FA}”),
-/* @**PURE** */ React.createElement(“h1”, { style: { fontSize: 32, fontWeight: 900, letterSpacing: “-1px”, color: G.text } }, “Stream”, /* @**PURE** */ React.createElement(“span”, { style: { color: G.accent } }, “Switch”)),
-/* @**PURE** */ React.createElement(“p”, { style: { color: G.muted, marginTop: 8, fontSize: 15 } }, “Smart streaming. Smarter spending.”)
+
+if (!user) return React.createElement(“div”,{style:{minHeight:“100vh”,background:G.bg,display:“flex”,flexDirection:“column”,alignItems:“center”,justifyContent:“center”,padding:24}},
+React.createElement(“style”,null,CSS),
+React.createElement(“div”,{style:{textAlign:“center”,marginBottom:36}},
+React.createElement(“div”,{style:{fontSize:52,marginBottom:10}},“📺”),
+React.createElement(“h1”,{style:{fontSize:32,fontWeight:900,letterSpacing:”-1px”,color:G.text}},
+“Stream”, React.createElement(“span”,{style:{color:G.accent}},“Switch”)
 ),
-/* @**PURE** */ React.createElement(“div”, { style: { width: “100%”, maxWidth: 360, display: “flex”, flexDirection: “column”, gap: 12 } },
-/* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, background: G.surface, borderRadius: 12, padding: 4, border: `1px solid ${G.border}` } },
-[“login”, “register”].map((m) => /* @**PURE** */ React.createElement(“button”, { key: m, onClick: () => setAuthMode(m), style: { flex: 1, padding: “9px”, border: “none”, cursor: “pointer”, fontFamily: “Outfit,sans-serif”, fontWeight: 600, fontSize: 14, borderRadius: 9, background: authMode === m ? G.card : “transparent”, color: authMode === m ? G.text : G.muted } }, m === “login” ? “Sign in” : “Sign up”))
+React.createElement(“p”,{style:{color:G.muted,marginTop:8,fontSize:15}},“Smart streaming. Smarter spending.”)
 ),
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “email”, placeholder: “Email address”, value: authEmail, onChange: (e) => setAuthEmail(e.target.value), autoComplete: “email” }),
-/* @**PURE** */ React.createElement(“div”, { className: “iw” },
-/* @**PURE** */ React.createElement(“input”, { className: “inp”, type: showAuthPass ? “text” : “password”, placeholder: “Password”, value: authPass, onChange: (e) => setAuthPass(e.target.value), onKeyDown: (e) => e.key === “Enter” && handleAuth(), autoComplete: authMode === “login” ? “current-password” : “new-password” }),
-/* @**PURE** */ React.createElement(“button”, { className: “eyeb”, onClick: () => setShowAuthPass((v) => !v), tabIndex: -1 }, /* @**PURE** */ React.createElement(Ico, { n: showAuthPass ? “eyeoff” : “eye” }))
+React.createElement(“div”,{style:{width:“100%”,maxWidth:360,display:“flex”,flexDirection:“column”,gap:12}},
+React.createElement(“div”,{style:{display:“flex”,background:G.surface,borderRadius:12,padding:4,border:`1px solid ${G.border}`}},
+[“login”,“register”].map(m =>
+React.createElement(“button”,{key:m,onClick:()=>setAuthMode(m),style:{flex:1,padding:“9px”,border:“none”,cursor:“pointer”,fontFamily:“Outfit,sans-serif”,fontWeight:600,fontSize:14,borderRadius:9,background:authMode===m?G.card:“transparent”,color:authMode===m?G.text:G.muted}},
+m===“login”?“Sign in”:“Sign up”
+)
+)
 ),
-authError && /* @**PURE** */ React.createElement(“p”, { style: { color: G.danger, fontSize: 13 } }, authError),
-/* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: handleAuth }, authMode === “login” ? “Sign in” : “Create account”),
-/* @**PURE** */ React.createElement(“p”, { style: { textAlign: “center”, fontSize: 12, color: G.muted } }, “Try for free \u2014 no credit card needed”)
+React.createElement(“input”,{className:“inp”,type:“email”,placeholder:“Email address”,value:authEmail,onChange:e=>setAuthEmail(e.target.value),autoComplete:“email”}),
+React.createElement(“div”,{className:“iw”},
+React.createElement(“input”,{className:“inp”,type:showAuthPass?“text”:“password”,placeholder:“Password”,value:authPass,onChange:e=>setAuthPass(e.target.value),onKeyDown:e=>e.key===“Enter”&&handleAuth(),autoComplete:authMode===“login”?“current-password”:“new-password”}),
+React.createElement(“button”,{className:“eyeb”,onClick:()=>setShowAuthPass(v=>!v),tabIndex:-1}, React.createElement(Ico,{n:showAuthPass?“eyeoff”:“eye”}))
+),
+authError && React.createElement(“p”,{style:{color:G.danger,fontSize:13}}, authError),
+React.createElement(“button”,{className:“btn bp”,style:{width:“100%”,padding:“14px”},onClick:handleAuth}, authMode===“login”?“Sign in”:“Create account”),
+React.createElement(“p”,{style:{textAlign:“center”,fontSize:12,color:G.muted}},“Try for free — no credit card needed”)
 )
 );
-return /* @**PURE** */ React.createElement(“div”, { className: “ss” },
-/* @**PURE** */ React.createElement(“style”, null, CSS),
-tab === “dashboard” && /* @**PURE** */ React.createElement(Dashboard, { user, subs, watchlist, savings, totalMonthly, getStatus, setSubs, setTab, upgradePremium }),
-tab === “subs” && /* @**PURE** */ React.createElement(SubsScreen, { subs, setSubs, watchlist, savings, totalMonthly, getStatus, openAddSub, openEditSub }),
-tab === “watchlist” && /* @**PURE** */ React.createElement(WatchScreen, { watchlist, setWatchlist }),
-tab === “news” && /* @**PURE** */ React.createElement(NewsScreen, { watchlist, setWatchlist, subs }),
-tab === “switch” && /* @**PURE** */ React.createElement(SwitchScreen, { user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }),
-tab === “settings” && /* @**PURE** */ React.createElement(SettingsScreen, { user, setUser, notifs, setNotifs, upgradePremium, openPwSheet: () => setShowPwSheet(true) }),
-/* @**PURE** */ React.createElement(“nav”, { className: “nav” },
-NAV.map(({ id, label, icon }) => /* @**PURE** */ React.createElement(“button”, { key: id, className: `nb${tab === id ? " on" : ""}`, onClick: () => setTab(id) },
-/* @**PURE** */ React.createElement(Ico, { n: icon, size: 22 }),
-/* @**PURE** */ React.createElement(“span”, null, label)
-))
+
+return React.createElement(“div”,{className:“ss”},
+React.createElement(“style”,null,CSS),
+tab===“dashboard” && React.createElement(Dashboard,{user,subs,watchlist,savings,totalMonthly,getStatus,setSubs,setTab,upgradePremium}),
+tab===“subs”      && React.createElement(SubsScreen,{subs,setSubs,watchlist,savings,totalMonthly,getStatus,openAddSub,openEditSub}),
+tab===“watchlist” && React.createElement(WatchScreen,{watchlist,setWatchlist}),
+tab===“news”      && React.createElement(NewsScreen,{watchlist,setWatchlist,subs}),
+tab===“switch”    && React.createElement(SwitchScreen,{user,subs,watchlist,savings,strategy,setStrategy,upgradePremium}),
+tab===“settings”  && React.createElement(SettingsScreen,{user,setUser,notifs,setNotifs,upgradePremium,openPwSheet:()=>setShowPwSheet(true)}),
+React.createElement(“nav”,{className:“nav”},
+NAV.map(({id,label,icon}) =>
+React.createElement(“button”,{key:id,className:`nb${tab===id?" on":""}`,onClick:()=>setTab(id)},
+React.createElement(Ico,{n:icon,size:22}),
+React.createElement(“span”,null,label)
+)
+)
 ),
-showSubSheet && /* @**PURE** */ React.createElement(SubSheet, { editingSub, subForm, setSubForm, saveSub, onClose: () => setShowSubSheet(false) }),
-showPwSheet && /* @**PURE** */ React.createElement(PwSheet, { user, setUser, onClose: () => setShowPwSheet(false) })
+showSubSheet && React.createElement(SubSheet,{editingSub,subForm,setSubForm,saveSub,onClose:()=>setShowSubSheet(false)}),
+showPwSheet  && React.createElement(PwSheet,{user,setUser,onClose:()=>setShowPwSheet(false)})
 );
 }
+
 const root = ReactDOM.createRoot(document.getElementById(“root”));
-root.render(/* @**PURE** */ React.createElement(StreamSwitch, null));
+root.render(React.createElement(StreamSwitch, null));
 </script>
 
 </body>
