@@ -605,16 +605,94 @@ function NewsScreen({ watchlist, setWatchlist, subs }) {
     )));
   })), detail && /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setDetail(null) }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", onClick: () => setDetail(null) }, /* @__PURE__ */ React.createElement(Ico, { n: "x" }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 16 } }, detail.poster_path ? /* @__PURE__ */ React.createElement("img", { src: `${TMDB_IMG}${detail.poster_path}`, alt: "", style: { width: 90, height: 135, borderRadius: 12, objectFit: "cover", flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 90, height: 135, borderRadius: 12, background: G.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, flexShrink: 0 } }, "\u{1F3AC}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 800, fontSize: 17, lineHeight: 1.3, marginBottom: 6 } }, detail.title || detail.name), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { className: "tag ta" }, /* @__PURE__ */ React.createElement(Ico, { n: "star", size: 11 }), " ", ((_a = detail.vote_average) == null ? void 0 : _a.toFixed(1)) || "?"), /* @__PURE__ */ React.createElement("span", { className: "tag ti" }, (detail.release_date || detail.first_air_date || "").slice(0, 4))))), detail.overview && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: G.muted, lineHeight: 1.6, marginBottom: 16 } }, detail.overview), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: () => addToWatchlist(detail), disabled: isAdded(detail) }, isAdded(detail) ? "\u2713 Al in je watchlist" : "+ Add to watchlist"))));
 }
+function PlanSettingsSheet({ planSettings, setPlanSettings, subs, onCalculate, onClose }) {
+  const [local, setLocal] = React.useState(planSettings);
+  const upd = (k, v) => setLocal((f) => ({ ...f, [k]: v }));
+  const togglePause = (m) => {
+    setLocal((f) => ({
+      ...f,
+      pauseMonths: f.pauseMonths.includes(m)
+        ? f.pauseMonths.filter((x) => x !== m)
+        : [...f.pauseMonths, m]
+    }));
+  };
+  return React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && onClose() },
+    React.createElement("div", { className: "sh", style: { maxHeight: "88vh" } },
+      React.createElement("div", { className: "hndl" }),
+      React.createElement("h3", { style: { fontWeight: 800, fontSize: 20, marginBottom: 4 } }, "Plan Settings"),
+      React.createElement("p", { style: { color: G.muted, fontSize: 13, marginBottom: 20 } }, "Customize your Switch Strategy"),
+      React.createElement("div", { style: { marginBottom: 20 } },
+        React.createElement("label", { className: "lbl" }, "Evenings per week: ", React.createElement("strong", { style: { color: G.text } }, local.evenings)),
+        React.createElement("input", { type: "range", min: 1, max: 7, value: local.evenings, onChange: (e) => upd("evenings", Number(e.target.value)) }),
+        React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, color: G.muted, marginTop: 4 } },
+          React.createElement("span", null, "1"), React.createElement("span", null, "7")
+        )
+      ),
+      React.createElement("div", { style: { marginBottom: 20 } },
+        React.createElement("label", { className: "lbl" }, "Max budget per month"),
+        React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 8 } },
+          [8, 12, 16, 20].map((b) =>
+            React.createElement("button", {
+              key: b, className: "btn bsm",
+              style: { flex: 1, background: local.maxBudget === b ? G.accent : G.border, color: local.maxBudget === b ? "#08080f" : G.text },
+              onClick: () => upd("maxBudget", b)
+            }, "\u20AC" + b)
+          )
+        ),
+        React.createElement("input", {
+          className: "inp", type: "text", inputMode: "numeric",
+          placeholder: "Custom...", value: local.maxBudget,
+          onChange: (e) => upd("maxBudget", Number(e.target.value) || 20)
+        })
+      ),
+      React.createElement("div", { style: { marginBottom: 20 } },
+        React.createElement("label", { className: "lbl" }, "Always keep active"),
+        React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+          React.createElement("button", {
+            className: "btn bsm",
+            style: { background: local.alwaysKeep === "" ? G.accent : G.border, color: local.alwaysKeep === "" ? "#08080f" : G.text },
+            onClick: () => upd("alwaysKeep", "")
+          }, "None"),
+          subs.map((sub) => {
+            const sv = SERVICES.find((s) => s.id === sub.serviceId);
+            return React.createElement("button", {
+              key: sub.id, className: "btn bsm",
+              style: { background: local.alwaysKeep === sub.serviceId ? (sv && sv.color) || G.accent : G.border, color: local.alwaysKeep === sub.serviceId ? "white" : G.text },
+              onClick: () => upd("alwaysKeep", sub.serviceId)
+            }, (sv && sv.icon) + " " + sub.name);
+          })
+        )
+      ),
+      React.createElement("div", { style: { marginBottom: 24 } },
+        React.createElement("label", { className: "lbl" }, "Pause months (tap to select)"),
+        React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+          MONTHS.map((name, idx) =>
+            React.createElement("button", {
+              key: idx, className: "btn bsm",
+              style: {
+                background: local.pauseMonths.includes(idx) ? G.warn + "33" : G.border,
+                color: local.pauseMonths.includes(idx) ? G.warn : G.muted,
+                border: "1px solid " + (local.pauseMonths.includes(idx) ? G.warn + "66" : "transparent"),
+                minWidth: 44
+              },
+              onClick: () => togglePause(idx)
+            }, name)
+          )
+        )
+      ),
+      React.createElement("button", {
+        className: "btn bp", style: { width: "100%", padding: 16, fontSize: 16 },
+        onClick: () => { setPlanSettings(local); onCalculate(local); }
+      }, "\u26A1 Calculate Plan"),
+      React.createElement("button", { className: "btn bg", style: { width: "100%", marginTop: 8 }, onClick: onClose }, "Cancel")
+    )
+  );
+}
+
 function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }) {
-  const [showSettings, setShowSettings] = useState(false);
-  const [planSettings, setPlanSettings] = useState({
-    evenings: 3,
-    maxBudget: 20,
-    alwaysKeep: "",
-    pauseMonths: []
-  });
-  const isWide = typeof window !== "undefined" && window.innerWidth >= 768;
-  const [wide, setWide] = useState(isWide);
+const [showSettings, setShowSettings] = React.useState(false);
+const [planSettings, setPlanSettings] = React.useState({ evenings: 3, maxBudget: 20, alwaysKeep: “”, pauseMonths: [] });
+const [wide, setWide] = React.useState(typeof window !== “undefined” && window.innerWidth >= 768);
 
 React.useEffect(() => {
 const handler = () => setWide(window.innerWidth >= 768);
@@ -632,226 +710,51 @@ if (!platformMonths[w.platform]) platformMonths[w.platform] = 0;
 if (w.type === “series”) {
 const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes || 0) * (w.seasons || 1);
 const b = calcBinge(totalEps, w.epDuration || 45, s.evenings || 3);
-platformMonths[w.platform] += (b == null ? void 0 : b.months) || 1;
+platformMonths[w.platform] += (b && b.months) || 1;
 } else {
 platformMonths[w.platform] += 1;
 }
 });
-
-```
-// Sort by watchlist need, but put alwaysKeep first
-const sorted = Object.entries(platformMonths)
-  .sort((a, b2) => b2[1] - a[1])
-  .map(([serviceId, months]) => ({
-    serviceId,
-    months: Math.min(months, 4),
-    sub: subs.find((sub) => sub.serviceId === serviceId),
-    service: SERVICES.find((svc2) => svc2.id === serviceId)
-  }))
-  .filter((p) => p.service);
-
-// Add subs not in watchlist
+const sorted = Object.entries(platformMonths).sort((a, b) => b[1] - a[1]).map(([serviceId, months]) => ({
+serviceId, months: Math.min(months, 4),
+sub: subs.find((sub) => sub.serviceId === serviceId),
+service: SERVICES.find((sv) => sv.id === serviceId)
+})).filter((p) => p.service);
 subs.forEach((sub) => {
-  if (!sorted.find((p) => p.serviceId === sub.serviceId))
-    sorted.push({ serviceId: sub.serviceId, months: 1, sub, service: SERVICES.find((sv) => sv.id === sub.serviceId) });
+if (!sorted.find((p) => p.serviceId === sub.serviceId))
+sorted.push({ serviceId: sub.serviceId, months: 1, sub, service: SERVICES.find((sv) => sv.id === sub.serviceId) });
 });
-
-// alwaysKeep goes first
 if (s.alwaysKeep) {
-  const idx = sorted.findIndex((p) => p.serviceId === s.alwaysKeep);
-  if (idx > 0) { const [item] = sorted.splice(idx, 1); sorted.unshift(item); }
+const idx = sorted.findIndex((p) => p.serviceId === s.alwaysKeep);
+if (idx > 0) { const item = sorted.splice(idx, 1)[0]; sorted.unshift(item); }
 }
-
-// Build 12-month plan, skipping user-chosen pause months
 const plan = [];
-let slot = 0;
 let svcIdx = 0;
-let monthsLeft = sorted[0]?.months || 0;
-
-for (let calSlot = 0; calSlot < 12 && slot < 12; calSlot++) {
-  const calMonth = (NOW_MONTH + calSlot) % 12;
-  const isUserPause = s.pauseMonths.includes(calMonth);
-
-  if (isUserPause) {
-    plan.push({ month: slot, calMonth, type: "pause", userPause: true });
-  } else {
-    // Find next service that fits budget
-    let placed = false;
-    let attempts = 0;
-    while (!placed && svcIdx < sorted.length && attempts < sorted.length) {
-      const p = sorted[svcIdx];
-      const price = p.sub?.price || p.service?.price || 0;
-      if (price <= (s.maxBudget || 999) || s.alwaysKeep === p.serviceId) {
-        plan.push({
-          month: slot, calMonth, type: "active",
-          serviceId: p.serviceId, svc: p.service,
-          price: p.sub?.price || p.service?.price
-        });
-        monthsLeft--;
-        if (monthsLeft <= 0) { svcIdx++; monthsLeft = sorted[svcIdx]?.months || 0; }
-        placed = true;
-      } else {
-        svcIdx++;
-        monthsLeft = sorted[svcIdx]?.months || 0;
-        attempts++;
-      }
-    }
-    if (!placed) plan.push({ month: slot, calMonth, type: "pause" });
-  }
-  slot++;
+let monthsLeft = (sorted[0] && sorted[0].months) || 0;
+for (let calSlot = 0; calSlot < 12; calSlot++) {
+const calMonth = (NOW_MONTH + calSlot) % 12;
+if (s.pauseMonths.includes(calMonth)) {
+plan.push({ month: calSlot, calMonth, type: “pause”, userPause: true });
+} else {
+let placed = false;
+let attempts = 0;
+while (!placed && svcIdx < sorted.length && attempts < sorted.length) {
+const p = sorted[svcIdx];
+const price = (p.sub && p.sub.price) || (p.service && p.service.price) || 0;
+if (price <= (s.maxBudget || 999) || s.alwaysKeep === p.serviceId) {
+plan.push({ month: calSlot, calMonth, type: “active”, serviceId: p.serviceId, svc: p.service, price });
+monthsLeft–;
+if (monthsLeft <= 0) { svcIdx++; monthsLeft = (sorted[svcIdx] && sorted[svcIdx].months) || 0; }
+placed = true;
+} else { svcIdx++; monthsLeft = (sorted[svcIdx] && sorted[svcIdx].months) || 0; attempts++; }
 }
-
-// Fill remaining
-while (plan.length < 12) {
-  const calMonth = (NOW_MONTH + plan.length) % 12;
-  plan.push({ month: plan.length, calMonth, type: "pause" });
+if (!placed) plan.push({ month: calSlot, calMonth, type: “pause” });
 }
-
-plan.sort((a, b2) => a.month - b2.month);
+}
 setStrategy({ plan, settings: s });
 setShowSettings(false);
-```
-
 };
 
-// Settings sheet
-const SettingsSheet = () => {
-const [local, setLocal] = useState(planSettings);
-const upd = (k, v) => setLocal((f) => ({ …f, [k]: v }));
-const togglePause = (m) => {
-setLocal((f) => ({
-…f,
-pauseMonths: f.pauseMonths.includes(m)
-? f.pauseMonths.filter((x) => x !== m)
-: […f.pauseMonths, m]
-}));
-};
-
-```
-return React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setShowSettings(false) },
-  React.createElement("div", { className: "sh", style: { maxHeight: "88vh" } },
-    React.createElement("div", { className: "hndl" }),
-    React.createElement("h3", { style: { fontWeight: 800, fontSize: 20, marginBottom: 4 } }, "Plan Settings"),
-    React.createElement("p", { style: { color: G.muted, fontSize: 13, marginBottom: 20 } }, "Customize your Switch Strategy"),
-
-    // Evenings per week
-    React.createElement("div", { style: { marginBottom: 20 } },
-      React.createElement("label", { className: "lbl" }, "Evenings per week: ", React.createElement("strong", { style: { color: G.text } }, local.evenings)),
-      React.createElement("input", { type: "range", min: 1, max: 7, value: local.evenings, onChange: (e) => upd("evenings", Number(e.target.value)) }),
-      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, color: G.muted, marginTop: 4 } },
-        React.createElement("span", null, "1"),
-        React.createElement("span", null, "7")
-      )
-    ),
-
-    // Max budget
-    React.createElement("div", { style: { marginBottom: 20 } },
-      React.createElement("label", { className: "lbl" }, "Max budget per month"),
-      React.createElement("div", { style: { display: "flex", gap: 8 } },
-        [8, 12, 16, 20].map((b) =>
-          React.createElement("button", {
-            key: b, className: "btn bsm",
-            style: { flex: 1, background: local.maxBudget === b ? G.accent : G.border, color: local.maxBudget === b ? "#08080f" : G.text },
-            onClick: () => upd("maxBudget", b)
-          }, "\u20AC" + b)
-        )
-      ),
-      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 8 } },
-        React.createElement("span", { style: { color: G.muted, fontSize: 13 } }, "Custom:"),
-        React.createElement("input", {
-          className: "inp", type: "text", inputMode: "numeric",
-          placeholder: "€20", value: local.maxBudget,
-          onChange: (e) => upd("maxBudget", Number(e.target.value) || 20),
-          style: { flex: 1 }
-        })
-      )
-    ),
-
-    // Always keep
-    React.createElement("div", { style: { marginBottom: 20 } },
-      React.createElement("label", { className: "lbl" }, "Always keep active"),
-      React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
-        React.createElement("button", {
-          className: "btn bsm",
-          style: { background: local.alwaysKeep === "" ? G.accent : G.border, color: local.alwaysKeep === "" ? "#08080f" : G.text },
-          onClick: () => upd("alwaysKeep", "")
-        }, "None"),
-        subs.map((sub) => {
-          const sv = SERVICES.find((s2) => s2.id === sub.serviceId);
-          return React.createElement("button", {
-            key: sub.id, className: "btn bsm",
-            style: { background: local.alwaysKeep === sub.serviceId ? sv?.color || G.accent : G.border, color: local.alwaysKeep === sub.serviceId ? "white" : G.text },
-            onClick: () => upd("alwaysKeep", sub.serviceId)
-          }, sv?.icon + " " + sub.name);
-        })
-      )
-    ),
-
-    // Pause months
-    React.createElement("div", { style: { marginBottom: 24 } },
-      React.createElement("label", { className: "lbl" }, "Pause months (tap to select)"),
-      React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
-        MONTHS.map((name, idx) =>
-          React.createElement("button", {
-            key: idx, className: "btn bsm",
-            style: {
-              background: local.pauseMonths.includes(idx) ? G.warn + "33" : G.border,
-              color: local.pauseMonths.includes(idx) ? G.warn : G.muted,
-              border: local.pauseMonths.includes(idx) ? "1px solid " + G.warn + "66" : "1px solid transparent",
-              minWidth: 44
-            },
-            onClick: () => togglePause(idx)
-          }, name)
-        )
-      )
-    ),
-
-    // Calculate button
-    React.createElement("button", {
-      className: "btn bp", style: { width: "100%", padding: 16, fontSize: 16 },
-      onClick: () => { setPlanSettings(local); generateStrategy(local); }
-    }, "\u26A1 Calculate Plan"),
-    React.createElement("button", { className: "btn bg", style: { width: "100%", marginTop: 8 }, onClick: () => setShowSettings(false) }, "Cancel")
-  )
-);
-```
-
-};
-
-// Calendar grid (iPad/desktop only)
-const CalendarGrid = ({ plan }) => {
-const rows = [plan.slice(0, 4), plan.slice(4, 8), plan.slice(8, 12)];
-return React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
-React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15, marginBottom: 14 } }, “\uD83D\uDCC5 Year Overview”),
-rows.map((row, ri) =>
-React.createElement(“div”, { key: ri, style: { display: “grid”, gridTemplateColumns: “1fr 1fr 1fr 1fr”, gap: 8, marginBottom: 8 } },
-row.map((m) => {
-var _a, _b;
-const color = m.type === “pause” ? G.border : ((_a = m.svc) == null ? void 0 : _a.color) || G.muted;
-return React.createElement(“div”, {
-key: m.month,
-style: {
-background: m.type === “pause” ? G.surface : color + “18”,
-border: “1px solid “ + (m.type === “pause” ? G.border : color + “44”),
-borderRadius: 14, padding: “14px 10px”, textAlign: “center”
-}
-},
-React.createElement(“div”, { style: { fontSize: 11, fontWeight: 700, color: G.muted, marginBottom: 6, textTransform: “uppercase”, letterSpacing: “0.5px” } }, MONTHS[m.calMonth]),
-React.createElement(“div”, { style: { fontSize: 28, marginBottom: 6 } }, m.type === “pause” ? “\u23F8” : ((_b = m.svc) == null ? void 0 : _b.icon) || “\uD83D\uDCFA”),
-React.createElement(“div”, { style: { fontSize: 12, fontWeight: 700, color: m.type === “pause” ? G.muted : color } },
-m.type === “pause” ? “Pause” : (m.svc?.name || “”).split(” “)[0]
-),
-React.createElement(“div”, { style: { fontSize: 12, fontWeight: 600, color: G.text, marginTop: 4 } },
-m.type === “pause” ? “\u20AC0” : “\u20AC” + (m.price?.toFixed(2) || “0”)
-)
-);
-})
-)
-)
-);
-};
-
-// Non-premium screen
 if (!user.isPremium) return React.createElement(“div”, { className: “scr fu” },
 React.createElement(“div”, { style: { padding: “20px 0 16px” } },
 React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Switch Strategy”),
@@ -883,122 +786,103 @@ React.createElement(Ico, { n: “crown” }), “ Upgrade to Premium \u2014 \u20
 );
 
 const wlItems = watchlist.filter((w) => w.status !== “finished”);
-const byPlatform = SERVICES.map((s2) => ({
-…s2,
-items: wlItems.filter((w) => w.platform === s2.id),
-totalMonths: wlItems.filter((w) => w.platform === s2.id && w.type === “series”).reduce((sum, w) => {
+const byPlatform = SERVICES.map((sv) => ({
+id: sv.id, name: sv.name, color: sv.color, icon: sv.icon,
+items: wlItems.filter((w) => w.platform === sv.id),
+totalMonths: wlItems.filter((w) => w.platform === sv.id && w.type === “series”).reduce((sum, w) => {
 const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes || 0) * (w.seasons || 1);
 const b = calcBinge(totalEps, w.epDuration || 45, planSettings.evenings || 3);
-return sum + ((b == null ? void 0 : b.months) || 0);
+return sum + ((b && b.months) || 0);
 }, 0)
-})).filter((s2) => s2.items.length > 0);
+})).filter((sv) => sv.items.length > 0);
 
 return React.createElement(“div”, { className: “scr fu” },
-// Header
 React.createElement(“div”, { style: { padding: “20px 0 16px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
 React.createElement(“div”, null,
 React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Switch Strategy”),
-React.createElement(“span”, { className: “tag tp”, style: { marginTop: 4, display: “inline-flex” } },
-React.createElement(Ico, { n: “crown”, size: 12 }), “ Premium”
+React.createElement(“span”, { className: “tag tp”, style: { marginTop: 4, display: “inline-flex” } }, React.createElement(Ico, { n: “crown”, size: 12 }), “ Premium”)
+),
+React.createElement(“button”, { className: “btn bp bsm”, onClick: () => setShowSettings(true) },
+strategy ? “\u21BA Recalculate” : “\u26A1 Generate Plan”
 )
 ),
-React.createElement(“button”, {
-className: “btn bp bsm”,
-onClick: () => setShowSettings(true)
-}, strategy ? “\u21BA Recalculate” : “\u26A1 Generate Plan”)
+byPlatform.length > 0 && React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
+React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, gap: 8, marginBottom: 12 } },
+React.createElement(Ico, { n: “zap”, size: 16 }),
+React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15 } }, “Watchlist analysis”)
 ),
-
-```
-// Watchlist analysis
-byPlatform.length > 0 && React.createElement("div", { className: "card", style: { padding: 16, marginBottom: 12 } },
-  React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12 } },
-    React.createElement(Ico, { n: "zap", size: 16 }),
-    React.createElement("p", { style: { fontWeight: 700, fontSize: 15 } }, "Watchlist analysis")
-  ),
-  byPlatform.map((s2) =>
-    React.createElement("div", { key: s2.id, style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10, padding: "10px 12px", background: G.surface, borderRadius: 12 } },
-      React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, background: s2.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 } }, s2.icon),
-      React.createElement("div", { style: { flex: 1 } },
-        React.createElement("p", { style: { fontWeight: 600, fontSize: 14 } }, s2.name),
-        React.createElement("p", { style: { fontSize: 12, color: G.muted } }, s2.items.length + " title" + (s2.items.length !== 1 ? "s" : ""))
-      ),
-      s2.totalMonths > 0 && React.createElement("div", { style: { textAlign: "right" } },
-        React.createElement("p", { style: { fontWeight: 700, color: G.accent, fontSize: 14 } }, s2.totalMonths + " mo"),
-        React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "needed")
-      )
-    )
-  )
+byPlatform.map((sv) =>
+React.createElement(“div”, { key: sv.id, style: { display: “flex”, alignItems: “center”, gap: 10, marginBottom: 10, padding: “10px 12px”, background: G.surface, borderRadius: 12 } },
+React.createElement(“div”, { style: { width: 36, height: 36, borderRadius: 10, background: sv.color + “22”, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 20, flexShrink: 0 } }, sv.icon),
+React.createElement(“div”, { style: { flex: 1 } },
+React.createElement(“p”, { style: { fontWeight: 600, fontSize: 14 } }, sv.name),
+React.createElement(“p”, { style: { fontSize: 12, color: G.muted } }, sv.items.length + “ title” + (sv.items.length !== 1 ? “s” : “”))
 ),
-
-// Empty state
-!strategy && React.createElement("div", { className: "card", style: { padding: 40, textAlign: "center", color: G.muted } },
-  React.createElement("p", { style: { fontSize: 40, marginBottom: 12 } }, "\uD83D\uDD04"),
-  React.createElement("p", { style: { fontWeight: 600, color: G.text, marginBottom: 6 } }, "Ready to save?"),
-  React.createElement("p", { style: { fontSize: 14 } }, "Tap \u201CGenerate Plan\u201D to set your preferences and get a personalized yearly schedule.")
+sv.totalMonths > 0 && React.createElement(“div”, { style: { textAlign: “right” } },
+React.createElement(“p”, { style: { fontWeight: 700, color: G.accent, fontSize: 14 } }, sv.totalMonths + “ mo”),
+React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “needed”)
+)
+)
+)
 ),
-
-// Plan output
+!strategy && React.createElement(“div”, { className: “card”, style: { padding: 40, textAlign: “center”, color: G.muted } },
+React.createElement(“p”, { style: { fontSize: 40, marginBottom: 12 } }, “\uD83D\uDD04”),
+React.createElement(“p”, { style: { fontWeight: 600, color: G.text, marginBottom: 6 } }, “Ready to save?”),
+React.createElement(“p”, { style: { fontSize: 14 } }, “Tap Generate Plan to set your preferences and get a personalized yearly schedule.”)
+),
 strategy && React.createElement(React.Fragment, null,
-  // Savings hero
-  React.createElement("div", { className: "hero", style: { marginBottom: 14 } },
-    React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginBottom: 6 } }, "Annual savings"),
-    React.createElement("div", { className: "heroamt" }, fmt(savings.besparing)),
-    React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginTop: 6 } },
-      fmt(savings.strategieJaar) + " with plan vs " + fmt(savings.huidigJaar) + " current"
-    )
-  ),
-
-  // Settings summary chips
-  strategy.settings && React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 } },
-    React.createElement("span", { className: "tag ti" }, "\uD83C\uDF19 " + (strategy.settings.evenings || 3) + " evenings/wk"),
-    React.createElement("span", { className: "tag ti" }, "\uD83D\uDCB0 max \u20AC" + (strategy.settings.maxBudget || 20) + "/mo"),
-    strategy.settings.alwaysKeep && React.createElement("span", { className: "tag ta" },
-      "\u2665 " + (SERVICES.find((s2) => s2.id === strategy.settings.alwaysKeep)?.name || "")
-    ),
-    strategy.settings.pauseMonths?.length > 0 && React.createElement("span", { className: "tag tl" },
-      "\u23F8 " + strategy.settings.pauseMonths.map((m) => MONTHS[m]).join(", ")
-    )
-  ),
-
-  // Calendar grid — iPad/desktop only
-  wide && React.createElement(CalendarGrid, { plan: strategy.plan }),
-
-  // Monthly breakdown — always shown
-  React.createElement("div", { className: "card", style: { padding: 16 } },
-    React.createElement("p", { style: { fontWeight: 700, marginBottom: 12 } }, "Monthly breakdown"),
-    strategy.plan.map((m, i) => {
-      var _a, _b;
-      const shows = wlItems.filter((w) => w.platform === m.serviceId);
-      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid " + G.border } },
-        React.createElement("div", { style: { width: 36, fontWeight: 700, color: G.muted, fontSize: 13 } }, MONTHS[m.calMonth]),
-        React.createElement("div", { style: { fontSize: 20 } }, m.type === "pause" ? "\u23F8" : ((_a = m.svc) == null ? void 0 : _a.icon) || "\uD83D\uDCFA"),
-        React.createElement("div", { style: { flex: 1 } },
-          React.createElement("p", { style: { fontWeight: 600, fontSize: 14 } },
-            m.type === "pause" ? (m.userPause ? "Pause \u2014 your choice" : "Pause month") : (_b = m.svc) == null ? void 0 : _b.name
-          ),
-          m.type === "active" && shows.length > 0 && React.createElement("p", { style: { fontSize: 11, color: G.muted, marginTop: 2 } }, shows.map((s2) => s2.title).join(", "))
-        ),
-        React.createElement("div", { style: { fontWeight: 700, color: m.type === "pause" ? G.accent : G.text } },
-          m.type === "pause" ? "\u20AC0" : "\u20AC" + (m.price?.toFixed(2) || "0")
-        )
-      );
-    }),
-    // Totals
-    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 0", fontWeight: 800 } },
-      React.createElement("span", { style: { color: G.muted } }, "Total with Switch Strategy"),
-      React.createElement("span", { style: { color: G.accent } }, fmt(savings.strategieJaar))
-    ),
-    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "8px 0 0" } },
-      React.createElement("span", { style: { color: G.muted, fontSize: 13 } }, "Savings vs. current"),
-      React.createElement("span", { style: { color: G.accent, fontSize: 13, fontWeight: 700 } }, fmt(savings.besparing))
-    )
-  )
+React.createElement(“div”, { className: “hero”, style: { marginBottom: 14 } },
+React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginBottom: 6 } }, “Annual savings”),
+React.createElement(“div”, { className: “heroamt” }, fmt(savings.besparing)),
+React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginTop: 6 } }, fmt(savings.strategieJaar) + “ with plan vs “ + fmt(savings.huidigJaar) + “ current”)
 ),
-
-// Settings sheet
-showSettings && React.createElement(SettingsSheet, null)
-```
-
+strategy.settings && React.createElement(“div”, { style: { display: “flex”, gap: 8, flexWrap: “wrap”, marginBottom: 12 } },
+React.createElement(“span”, { className: “tag ti” }, “\uD83C\uDF19 “ + (strategy.settings.evenings || 3) + “ evenings/wk”),
+React.createElement(“span”, { className: “tag ti” }, “\uD83D\uDCB0 max \u20AC” + (strategy.settings.maxBudget || 20) + “/mo”),
+strategy.settings.alwaysKeep && React.createElement(“span”, { className: “tag ta” }, “\u2665 “ + ((SERVICES.find((s) => s.id === strategy.settings.alwaysKeep) || {}).name || “”)),
+strategy.settings.pauseMonths && strategy.settings.pauseMonths.length > 0 && React.createElement(“span”, { className: “tag tl” }, “\u23F8 “ + strategy.settings.pauseMonths.map((m) => MONTHS[m]).join(”, “))
+),
+wide && React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
+React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15, marginBottom: 14 } }, “\uD83D\uDCC5 Year Overview”),
+[strategy.plan.slice(0,4), strategy.plan.slice(4,8), strategy.plan.slice(8,12)].map((row, ri) =>
+React.createElement(“div”, { key: ri, style: { display: “grid”, gridTemplateColumns: “1fr 1fr 1fr 1fr”, gap: 8, marginBottom: 8 } },
+row.map((m) => {
+const color = m.type === “pause” ? G.border : ((m.svc && m.svc.color) || G.muted);
+return React.createElement(“div”, { key: m.month, style: { background: m.type === “pause” ? G.surface : color + “18”, border: “1px solid “ + (m.type === “pause” ? G.border : color + “44”), borderRadius: 14, padding: “14px 10px”, textAlign: “center” } },
+React.createElement(“div”, { style: { fontSize: 11, fontWeight: 700, color: G.muted, marginBottom: 6, textTransform: “uppercase”, letterSpacing: “0.5px” } }, MONTHS[m.calMonth]),
+React.createElement(“div”, { style: { fontSize: 28, marginBottom: 6 } }, m.type === “pause” ? “\u23F8” : (m.svc && m.svc.icon) || “\uD83D\uDCFA”),
+React.createElement(“div”, { style: { fontSize: 12, fontWeight: 700, color: m.type === “pause” ? G.muted : color } }, m.type === “pause” ? “Pause” : ((m.svc && m.svc.name) || “”).split(” “)[0]),
+React.createElement(“div”, { style: { fontSize: 12, fontWeight: 600, color: G.text, marginTop: 4 } }, m.type === “pause” ? “\u20AC0” : “\u20AC” + (m.price ? m.price.toFixed(2) : “0”))
+);
+})
+)
+)
+),
+React.createElement(“div”, { className: “card”, style: { padding: 16 } },
+React.createElement(“p”, { style: { fontWeight: 700, marginBottom: 12 } }, “Monthly breakdown”),
+strategy.plan.map((m, i) => {
+const shows = wlItems.filter((w) => w.platform === m.serviceId);
+return React.createElement(“div”, { key: i, style: { display: “flex”, alignItems: “center”, gap: 12, padding: “10px 0”, borderBottom: “1px solid “ + G.border } },
+React.createElement(“div”, { style: { width: 36, fontWeight: 700, color: G.muted, fontSize: 13 } }, MONTHS[m.calMonth]),
+React.createElement(“div”, { style: { fontSize: 20 } }, m.type === “pause” ? “\u23F8” : (m.svc && m.svc.icon) || “\uD83D\uDCFA”),
+React.createElement(“div”, { style: { flex: 1 } },
+React.createElement(“p”, { style: { fontWeight: 600, fontSize: 14 } }, m.type === “pause” ? (m.userPause ? “Pause \u2014 your choice” : “Pause month”) : (m.svc && m.svc.name)),
+m.type === “active” && shows.length > 0 && React.createElement(“p”, { style: { fontSize: 11, color: G.muted, marginTop: 2 } }, shows.map((s) => s.title).join(”, “))
+),
+React.createElement(“div”, { style: { fontWeight: 700, color: m.type === “pause” ? G.accent : G.text } }, m.type === “pause” ? “\u20AC0” : “\u20AC” + (m.price ? m.price.toFixed(2) : “0”))
+);
+}),
+React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, padding: “12px 0 0”, fontWeight: 800 } },
+React.createElement(“span”, { style: { color: G.muted } }, “Total with Switch Strategy”),
+React.createElement(“span”, { style: { color: G.accent } }, fmt(savings.strategieJaar))
+),
+React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, padding: “8px 0 0” } },
+React.createElement(“span”, { style: { color: G.muted, fontSize: 13 } }, “Savings vs. current”),
+React.createElement(“span”, { style: { color: G.accent, fontSize: 13, fontWeight: 700 } }, fmt(savings.besparing))
+)
+)
+),
+showSettings && React.createElement(PlanSettingsSheet, { planSettings, setPlanSettings, subs, onCalculate: generateStrategy, onClose: () => setShowSettings(false) })
 );
 }
 
