@@ -606,290 +606,616 @@ function NewsScreen({ watchlist, setWatchlist, subs }) {
   })), detail && /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setDetail(null) }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", onClick: () => setDetail(null) }, /* @__PURE__ */ React.createElement(Ico, { n: "x" }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 16 } }, detail.poster_path ? /* @__PURE__ */ React.createElement("img", { src: `${TMDB_IMG}${detail.poster_path}`, alt: "", style: { width: 90, height: 135, borderRadius: 12, objectFit: "cover", flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 90, height: 135, borderRadius: 12, background: G.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, flexShrink: 0 } }, "\u{1F3AC}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 800, fontSize: 17, lineHeight: 1.3, marginBottom: 6 } }, detail.title || detail.name), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { className: "tag ta" }, /* @__PURE__ */ React.createElement(Ico, { n: "star", size: 11 }), " ", ((_a = detail.vote_average) == null ? void 0 : _a.toFixed(1)) || "?"), /* @__PURE__ */ React.createElement("span", { className: "tag ti" }, (detail.release_date || detail.first_air_date || "").slice(0, 4))))), detail.overview && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: G.muted, lineHeight: 1.6, marginBottom: 16 } }, detail.overview), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: () => addToWatchlist(detail), disabled: isAdded(detail) }, isAdded(detail) ? "\u2713 Al in je watchlist" : "+ Add to watchlist"))));
 }
 function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }) {
-  const generateStrategy = () => {
-    var _a;
-    const NOW_MONTH = new Date().getMonth();
-    const platformMonths = {};
-    watchlist.filter((w) => w.status !== "finished").forEach((w) => {
-      if (!platformMonths[w.platform]) platformMonths[w.platform] = 0;
-      if (w.type === "series") {
-        const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes || 0) * (w.seasons || 1);
-        const b = calcBinge(totalEps, w.epDuration || 45, w.evenings || 3);
-        platformMonths[w.platform] += (b == null ? void 0 : b.months) || 1;
-      } else {
-        platformMonths[w.platform] += 1;
-      }
-    });
-    const sorted = Object.entries(platformMonths).sort((a, b) => b[1] - a[1]).map(([serviceId, months]) => ({
-      serviceId,
-      months: Math.min(months, 4),
-      sub: subs.find((s) => s.serviceId === serviceId),
-      service: SERVICES.find((s) => s.id === serviceId)
-    })).filter((p) => p.service);
-    subs.forEach((sub) => {
-      if (!sorted.find((p) => p.serviceId === sub.serviceId)) {
-        sorted.push({ serviceId: sub.serviceId, months: 1, sub, service: SERVICES.find((s) => s.id === sub.serviceId) });
-      }
-    });
-    if (!sorted.length) {
-      setStrategy({ plan: Array.from({ length: 12 }, (_, i) => ({ month: i, calMonth: (NOW_MONTH + i) % 12, type: "pause" })) });
-      return;
-    }
-    const plan = [];
-    let slot = 0;
-    for (const p of sorted) {
-      for (let m = 0; m < p.months && slot < 12; m++, slot++) {
-        plan.push({
-          month: slot,
-          calMonth: (NOW_MONTH + slot) % 12,
-          type: "active",
-          serviceId: p.serviceId,
-          svc: p.service,
-          price: ((_a = p.sub) == null ? void 0 : _a.price) || p.service.price
-        });
-      }
-    }
-    while (plan.length < 12) {
-      plan.push({ month: plan.length, calMonth: (NOW_MONTH + plan.length) % 12, type: "pause" });
-    }
-    plan.sort((a, b) => a.month - b.month);
-    setStrategy({ plan });
-  };
-  if (!user.isPremium) return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 16px" } }, /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, "Switch Strategy"), /* @__PURE__ */ React.createElement("p", { style: { color: G.muted, fontSize: 14, marginTop: 4 } }, "Rotate smart, pay less")), /* @__PURE__ */ React.createElement("div", { className: "hero", style: { marginBottom: 16 } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginBottom: 6 } }, "You can save"), /* @__PURE__ */ React.createElement("div", { className: "heroamt" }, fmt(savings.huidigJaar * 0.5)), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginTop: 6 } }, "per year (estimate)")), /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 20, marginBottom: 14 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, marginBottom: 12 } }, "Comparison"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 8, fontSize: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { color: G.muted } }, "Current per year"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: G.danger } }, fmt(savings.huidigJaar))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 14, fontSize: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { color: G.muted } }, "With Switch Strategy"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: G.accent } }, fmt(savings.huidigJaar * 0.5))), /* @__PURE__ */ React.createElement("div", { style: { background: "#00e5a010", border: "1px solid #00e5a030", borderRadius: 12, padding: 14, textAlign: "center" } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 18, color: G.accent, fontWeight: 800 } }, fmt(savings.huidigJaar * 0.5), " per jaar"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted, marginTop: 4 } }, "Exact figures after upgrading"))), /* @__PURE__ */ React.createElement("button", { className: "btn bprem", style: { width: "100%", padding: "16px" }, onClick: upgradePremium }, /* @__PURE__ */ React.createElement(Ico, { n: "crown" }), " Upgrade to Premium \u2014 \u20AC10/jaar"));
-  const wlItems = watchlist.filter((w) => w.status !== "finished");
-  const byPlatform = SERVICES.map((s) => __spreadProps(__spreadValues({}, s), {
-    items: wlItems.filter((w) => w.platform === s.id),
-    totalMonths: wlItems.filter((w) => w.platform === s.id && w.type === "series").reduce((sum, w) => {
-      const b = calcBinge(w.episodes, w.epDuration || 45, w.evenings || 3);
-      return sum + ((b == null ? void 0 : b.months) || 0);
-    }, 0)
-  })).filter((s) => s.items.length > 0);
-  return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, "Switch Strategy"), /* @__PURE__ */ React.createElement("span", { className: "tag tp", style: { marginTop: 4, display: "inline-flex" } }, /* @__PURE__ */ React.createElement(Ico, { n: "crown", size: 12 }), " Premium")), /* @__PURE__ */ React.createElement("button", { className: "btn bp bsm", onClick: generateStrategy }, strategy ? "Recalculate" : "Generate Plan")), byPlatform.length > 0 && /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 16, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12 } }, /* @__PURE__ */ React.createElement(Ico, { n: "zap", size: 16 }), /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, fontSize: 15 } }, "Watchlist analysis")), byPlatform.map((s) => /* @__PURE__ */ React.createElement("div", { key: s.id, style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10, padding: "10px 12px", background: G.surface, borderRadius: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, background: s.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 } }, s.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600, fontSize: 14 } }, s.name), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted } }, s.items.length, " title", s.items.length !== 1 ? "s" : "")), s.totalMonths > 0 && /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, color: G.accent, fontSize: 14 } }, s.totalMonths, " mnd"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "needed"))))), !strategy ? /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 40, textAlign: "center", color: G.muted } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 40, marginBottom: 12 } }, "\u{1F504}"), /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600, color: G.text, marginBottom: 6 } }, "Klaar om te besparen?"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14 } }, 'Klik "Generate Plan" voor een jaarplanning gebaseerd op jouw watchlist en subscriptionen.')) : /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement("div", { className: "hero", style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginBottom: 6 } }, "Jaarlijkse besparing"), /* @__PURE__ */ React.createElement("div", { className: "heroamt" }, fmt(savings.besparing)), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginTop: 6 } }, fmt(savings.strategieJaar), " met plan vs ", fmt(savings.huidigJaar), " huidig per jaar")), /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 16, marginBottom: 12 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, marginBottom: 14 } }, "Jaarplanning"), /* @__PURE__ */ React.createElement("div", { className: "mrow" }, strategy.plan.map((m) => {
-    var _a, _b, _c, _d;
-    return /* @__PURE__ */ React.createElement("div", { key: m.month, className: "chip", style: { background: m.type === "pause" ? G.border : (((_a = m.svc) == null ? void 0 : _a.color) || G.muted) + "25", border: `1px solid ${m.type === "pause" ? G.border : (((_b = m.svc) == null ? void 0 : _b.color) || G.muted) + "50"}`, color: m.type === "pause" ? G.muted : G.text } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16 } }, m.type === "pause" ? "\u23F8" : ((_c = m.svc) == null ? void 0 : _c.icon) || "\u{1F4FA}"), /* @__PURE__ */ React.createElement("div", { style: { marginTop: 4, fontWeight: 700 } }, MONTHS[m.calMonth != null ? m.calMonth : m.month]), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 9, marginTop: 2, opacity: 0.7 } }, m.type === "pause" ? "Pause" : (((_d = m.svc) == null ? void 0 : _d.name) || "").split(" ")[0]));
-  }))), /* @__PURE__ */ React.createElement("div", { className: "card", style: { padding: 16 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, marginBottom: 12 } }, "Monthly breakdown"), strategy.plan.map((m, i) => {
-    var _a, _b, _c;
-    return /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: `1px solid ${G.border}` } }, /* @__PURE__ */ React.createElement("div", { style: { width: 36, fontWeight: 700, color: G.muted, fontSize: 13 } }, MONTHS[m.calMonth != null ? m.calMonth : m.month]), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 20 } }, m.type === "pause" ? "\u23F8" : ((_a = m.svc) == null ? void 0 : _a.icon) || "\u{1F4FA}"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600, fontSize: 14 } }, m.type === "pause" ? "Pause month" : (_b = m.svc) == null ? void 0 : _b.name), m.type === "active" && (() => {
-      const shows = wlItems.filter((w) => w.platform === m.serviceId);
-      if (!shows.length) return null;
-      return /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted, marginTop: 2 } }, shows.map((s) => s.title).join(", "));
-    })()), /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, color: m.type === "pause" ? G.accent : G.text } }, m.type === "pause" ? "\u20AC0" : `\u20AC${(_c = m.price) == null ? void 0 : _c.toFixed(2)}`));
-  }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 0", fontWeight: 800 } }, /* @__PURE__ */ React.createElement("span", { style: { color: G.muted } }, "Totaal met Switch Strategy"), /* @__PURE__ */ React.createElement("span", { style: { color: G.accent } }, fmt(savings.strategieJaar))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "8px 0 0" } }, /* @__PURE__ */ React.createElement("span", { style: { color: G.muted, fontSize: 13 } }, "Besparing vs. huidig"), /* @__PURE__ */ React.createElement("span", { style: { color: G.accent, fontSize: 13, fontWeight: 700 } }, fmt(savings.besparing))))));
+  const [showSettings, setShowSettings] = useState(false);
+  const [planSettings, setPlanSettings] = useState({
+    evenings: 3,
+    maxBudget: 20,
+    alwaysKeep: "",
+    pauseMonths: []
+  });
+  const isWide = typeof window !== "undefined" && window.innerWidth >= 768;
+  const [wide, setWide] = useState(isWide);
+
+React.useEffect(() => {
+const handler = () => setWide(window.innerWidth >= 768);
+window.addEventListener(“resize”, handler);
+return () => window.removeEventListener(“resize”, handler);
+}, []);
+
+const NOW_MONTH = new Date().getMonth();
+
+const generateStrategy = (settings) => {
+const s = settings || planSettings;
+const platformMonths = {};
+watchlist.filter((w) => w.status !== “finished”).forEach((w) => {
+if (!platformMonths[w.platform]) platformMonths[w.platform] = 0;
+if (w.type === “series”) {
+const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes || 0) * (w.seasons || 1);
+const b = calcBinge(totalEps, w.epDuration || 45, s.evenings || 3);
+platformMonths[w.platform] += (b == null ? void 0 : b.months) || 1;
+} else {
+platformMonths[w.platform] += 1;
 }
-function SettingsScreen({ user, setUser, notifs, setNotifs, upgradePremium, openPwSheet }) {
-  const [showPwForm, setShowPwForm] = useState(false);
-  const [pwForm, setPwForm] = useState({ current: "", newPw: "", confirm: "" });
-  const [pwMsg, setPwMsg] = useState("");
-  const [showPayment, setShowPayment] = useState(false);
-  const [notifEnabled, setNotifEnabled] = useState((notifs == null ? void 0 : notifs.enabled) !== false);
-  const shareApp = () => {
-    var _a;
-    if (navigator.share) {
-      navigator.share({ title: "StreamSwitch", text: "Manage your streaming subscriptions smarter!", url: "https://streamswitcher.vercel.app" });
-    } else {
-      (_a = navigator.clipboard) == null ? void 0 : _a.writeText("https://streamswitcher.vercel.app");
-      alert("Link copied to clipboard!");
-    }
-  };
-  const savePw = () => {
-    if (!pwForm.current) return setPwMsg("Enter your current password.");
-    if (pwForm.newPw.length < 6) return setPwMsg("New password must be at least 6 characters.");
-    if (pwForm.newPw !== pwForm.confirm) return setPwMsg("Passwords do not match.");
-    setPwMsg("\u2705 Password changed successfully!");
-    setPwForm({ current: "", newPw: "", confirm: "" });
-    setTimeout(() => {
-      setPwMsg("");
-      setShowPwForm(false);
-    }, 2e3);
-  };
-  const toggleNotifs = async () => {
-    if (!notifEnabled) {
-      if ("Notification" in window) {
-        const perm = await Notification.requestPermission();
-        if (perm === "granted") {
-          setNotifEnabled(true);
-          setNotifs((n) => __spreadProps(__spreadValues({}, n), { enabled: true }));
-          new Notification("StreamSwitch", { body: "Notifications enabled! \u{1F389}", icon: "/icon.png" });
-        } else {
-          alert("Please allow notifications in your browser settings.");
-        }
+});
+
+```
+// Sort by watchlist need, but put alwaysKeep first
+const sorted = Object.entries(platformMonths)
+  .sort((a, b2) => b2[1] - a[1])
+  .map(([serviceId, months]) => ({
+    serviceId,
+    months: Math.min(months, 4),
+    sub: subs.find((sub) => sub.serviceId === serviceId),
+    service: SERVICES.find((svc2) => svc2.id === serviceId)
+  }))
+  .filter((p) => p.service);
+
+// Add subs not in watchlist
+subs.forEach((sub) => {
+  if (!sorted.find((p) => p.serviceId === sub.serviceId))
+    sorted.push({ serviceId: sub.serviceId, months: 1, sub, service: SERVICES.find((sv) => sv.id === sub.serviceId) });
+});
+
+// alwaysKeep goes first
+if (s.alwaysKeep) {
+  const idx = sorted.findIndex((p) => p.serviceId === s.alwaysKeep);
+  if (idx > 0) { const [item] = sorted.splice(idx, 1); sorted.unshift(item); }
+}
+
+// Build 12-month plan, skipping user-chosen pause months
+const plan = [];
+let slot = 0;
+let svcIdx = 0;
+let monthsLeft = sorted[0]?.months || 0;
+
+for (let calSlot = 0; calSlot < 12 && slot < 12; calSlot++) {
+  const calMonth = (NOW_MONTH + calSlot) % 12;
+  const isUserPause = s.pauseMonths.includes(calMonth);
+
+  if (isUserPause) {
+    plan.push({ month: slot, calMonth, type: "pause", userPause: true });
+  } else {
+    // Find next service that fits budget
+    let placed = false;
+    let attempts = 0;
+    while (!placed && svcIdx < sorted.length && attempts < sorted.length) {
+      const p = sorted[svcIdx];
+      const price = p.sub?.price || p.service?.price || 0;
+      if (price <= (s.maxBudget || 999) || s.alwaysKeep === p.serviceId) {
+        plan.push({
+          month: slot, calMonth, type: "active",
+          serviceId: p.serviceId, svc: p.service,
+          price: p.sub?.price || p.service?.price
+        });
+        monthsLeft--;
+        if (monthsLeft <= 0) { svcIdx++; monthsLeft = sorted[svcIdx]?.months || 0; }
+        placed = true;
+      } else {
+        svcIdx++;
+        monthsLeft = sorted[svcIdx]?.months || 0;
+        attempts++;
       }
-    } else {
-      setNotifEnabled(false);
-      setNotifs((n) => __spreadProps(__spreadValues({}, n), { enabled: false }));
     }
-  };
-  return /* @__PURE__ */ React.createElement("div", { className: "scr fu" }, /* @__PURE__ */ React.createElement("div", { style: { padding: "20px 0 16px" } }, /* @__PURE__ */ React.createElement("h2", { style: { fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px" } }, "Settings")), /* @__PURE__ */ React.createElement("div", { className: "card", style: { marginBottom: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { padding: "16px 16px 12px" } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 } }, "Account"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "Email"), /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600, marginBottom: 10 } }, user.email), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "Plan"), /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600, color: user.isPremium ? G.premium : G.text } }, user.isPremium ? "\u2B50 Premium" : "Free")), /* @__PURE__ */ React.createElement("div", { style: { height: 1, background: G.border } }), /* @__PURE__ */ React.createElement(
-    "button",
-    {
-      className: "btn bg",
-      style: { margin: 12, width: "calc(100% - 24px)", justifyContent: "flex-start", gap: 10 },
-      onClick: () => setShowPwForm((v) => !v)
-    },
-    "\u{1F511} Change password"
-  ), showPwForm && /* @__PURE__ */ React.createElement("div", { style: { padding: "0 16px 16px" } }, /* @__PURE__ */ React.createElement(
-    "input",
-    {
-      className: "inp",
-      type: "password",
-      placeholder: "Current password",
-      value: pwForm.current,
-      onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { current: e.target.value })),
-      style: { marginBottom: 8 }
-    }
-  ), /* @__PURE__ */ React.createElement(
-    "input",
-    {
-      className: "inp",
-      type: "password",
-      placeholder: "New password",
-      value: pwForm.newPw,
-      onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { newPw: e.target.value })),
-      style: { marginBottom: 8 }
-    }
-  ), /* @__PURE__ */ React.createElement(
-    "input",
-    {
-      className: "inp",
-      type: "password",
-      placeholder: "Confirm new password",
-      value: pwForm.confirm,
-      onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { confirm: e.target.value })),
-      style: { marginBottom: 8 }
-    }
-  ), pwMsg && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: pwMsg.includes("\u2705") ? G.accent : G.danger, marginBottom: 8 } }, pwMsg), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%" }, onClick: savePw }, "Save password"))), /* @__PURE__ */ React.createElement("div", { className: "card", style: { marginBottom: 14, padding: "16px" } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 } }, "Notifications"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600, fontSize: 15 } }, "\u{1F514} Push notifications"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, "Renewal reminders & updates")), /* @__PURE__ */ React.createElement(Toggle, { value: notifEnabled, onChange: toggleNotifs }))), !user.isPremium && /* @__PURE__ */ React.createElement("div", { className: "card", style: { marginBottom: 14, padding: 16, background: "linear-gradient(135deg,#1a1400,#0a0a00)", border: "1px solid #f7c94833" } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.premium, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 } }, "Premium"), /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, fontSize: 16, marginBottom: 4 } }, "Unlock Switch Strategy"), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 13, color: G.muted, marginBottom: 12 } }, "Save up to 50% on your subscriptions with smart rotation planning."), /* @__PURE__ */ React.createElement("button", { className: "btn bprem", style: { width: "100%" }, onClick: () => setShowPayment(true) }, "\u2728 Upgrade to Premium \u2014 \u20AC10/year")), showPayment && /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setShowPayment(false) }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { className: "hndl" }), /* @__PURE__ */ React.createElement("h3", { style: { fontWeight: 800, fontSize: 20, marginBottom: 4 } }, "Upgrade to Premium"), /* @__PURE__ */ React.createElement("p", { style: { color: G.muted, fontSize: 13, marginBottom: 20 } }, "One-time payment, lifetime access"), /* @__PURE__ */ React.createElement("div", { style: { background: G.card, borderRadius: 14, padding: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 8 } }, /* @__PURE__ */ React.createElement("span", { style: { color: G.muted } }, "StreamSwitch Premium"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "\u20AC10.00")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("span", { style: { color: G.muted } }, "VAT"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "\u20AC0.00")), /* @__PURE__ */ React.createElement("div", { style: { height: 1, background: G.border, margin: "12px 0" } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between" } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "Total"), /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 800, color: G.accent } }, "\u20AC10.00"))), /* @__PURE__ */ React.createElement("div", { style: { background: G.surface, borderRadius: 14, padding: 16, marginBottom: 16 } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted, marginBottom: 8 } }, "\u{1F4B3} Card number"), /* @__PURE__ */ React.createElement("input", { className: "inp", placeholder: "1234 5678 9012 3456", style: { marginBottom: 8 } }), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, /* @__PURE__ */ React.createElement("input", { className: "inp", placeholder: "MM/YY", style: { flex: 1 } }), /* @__PURE__ */ React.createElement("input", { className: "inp", placeholder: "CVV", style: { flex: 1 } }))), /* @__PURE__ */ React.createElement("button", { className: "btn bprem", style: { width: "100%", padding: 16, marginBottom: 8 }, onClick: () => {
-    upgradePremium();
-    setShowPayment(false);
-    alert("\u{1F389} Welcome to Premium! (Demo mode \u2014 no real payment processed)");
-  } }, "Pay \u20AC10.00"), /* @__PURE__ */ React.createElement("button", { className: "btn bg", style: { width: "100%" }, onClick: () => setShowPayment(false) }, "Cancel"), /* @__PURE__ */ React.createElement("p", { style: { textAlign: "center", fontSize: 11, color: G.muted, marginTop: 12 } }, "\u{1F512} Demo mode \u2014 no real payment processed"))), /* @__PURE__ */ React.createElement("div", { className: "card", style: { marginBottom: 14, padding: 16 } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 } }, "Share"), /* @__PURE__ */ React.createElement("button", { className: "btn bg", style: { width: "100%", justifyContent: "flex-start", gap: 10 }, onClick: shareApp }, "\u{1F4E4} Share StreamSwitch")), /* @__PURE__ */ React.createElement("button", { className: "btn bd", style: { width: "100%", marginTop: 4 }, onClick: () => {
-    setUser(null);
-    LS.set("ss_user", null);
-  } }, "Sign out"), /* @__PURE__ */ React.createElement("p", { style: { textAlign: "center", fontSize: 11, color: G.muted, marginTop: 14 } }, "StreamSwitch v3.0"));
+    if (!placed) plan.push({ month: slot, calMonth, type: "pause" });
+  }
+  slot++;
+}
+
+// Fill remaining
+while (plan.length < 12) {
+  const calMonth = (NOW_MONTH + plan.length) % 12;
+  plan.push({ month: plan.length, calMonth, type: "pause" });
+}
+
+plan.sort((a, b2) => a.month - b2.month);
+setStrategy({ plan, settings: s });
+setShowSettings(false);
+```
+
+};
+
+// Settings sheet
+const SettingsSheet = () => {
+const [local, setLocal] = useState(planSettings);
+const upd = (k, v) => setLocal((f) => ({ …f, [k]: v }));
+const togglePause = (m) => {
+setLocal((f) => ({
+…f,
+pauseMonths: f.pauseMonths.includes(m)
+? f.pauseMonths.filter((x) => x !== m)
+: […f.pauseMonths, m]
+}));
+};
+
+```
+return React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setShowSettings(false) },
+  React.createElement("div", { className: "sh", style: { maxHeight: "88vh" } },
+    React.createElement("div", { className: "hndl" }),
+    React.createElement("h3", { style: { fontWeight: 800, fontSize: 20, marginBottom: 4 } }, "Plan Settings"),
+    React.createElement("p", { style: { color: G.muted, fontSize: 13, marginBottom: 20 } }, "Customize your Switch Strategy"),
+
+    // Evenings per week
+    React.createElement("div", { style: { marginBottom: 20 } },
+      React.createElement("label", { className: "lbl" }, "Evenings per week: ", React.createElement("strong", { style: { color: G.text } }, local.evenings)),
+      React.createElement("input", { type: "range", min: 1, max: 7, value: local.evenings, onChange: (e) => upd("evenings", Number(e.target.value)) }),
+      React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11, color: G.muted, marginTop: 4 } },
+        React.createElement("span", null, "1"),
+        React.createElement("span", null, "7")
+      )
+    ),
+
+    // Max budget
+    React.createElement("div", { style: { marginBottom: 20 } },
+      React.createElement("label", { className: "lbl" }, "Max budget per month"),
+      React.createElement("div", { style: { display: "flex", gap: 8 } },
+        [8, 12, 16, 20].map((b) =>
+          React.createElement("button", {
+            key: b, className: "btn bsm",
+            style: { flex: 1, background: local.maxBudget === b ? G.accent : G.border, color: local.maxBudget === b ? "#08080f" : G.text },
+            onClick: () => upd("maxBudget", b)
+          }, "\u20AC" + b)
+        )
+      ),
+      React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginTop: 8 } },
+        React.createElement("span", { style: { color: G.muted, fontSize: 13 } }, "Custom:"),
+        React.createElement("input", {
+          className: "inp", type: "text", inputMode: "numeric",
+          placeholder: "€20", value: local.maxBudget,
+          onChange: (e) => upd("maxBudget", Number(e.target.value) || 20),
+          style: { flex: 1 }
+        })
+      )
+    ),
+
+    // Always keep
+    React.createElement("div", { style: { marginBottom: 20 } },
+      React.createElement("label", { className: "lbl" }, "Always keep active"),
+      React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } },
+        React.createElement("button", {
+          className: "btn bsm",
+          style: { background: local.alwaysKeep === "" ? G.accent : G.border, color: local.alwaysKeep === "" ? "#08080f" : G.text },
+          onClick: () => upd("alwaysKeep", "")
+        }, "None"),
+        subs.map((sub) => {
+          const sv = SERVICES.find((s2) => s2.id === sub.serviceId);
+          return React.createElement("button", {
+            key: sub.id, className: "btn bsm",
+            style: { background: local.alwaysKeep === sub.serviceId ? sv?.color || G.accent : G.border, color: local.alwaysKeep === sub.serviceId ? "white" : G.text },
+            onClick: () => upd("alwaysKeep", sub.serviceId)
+          }, sv?.icon + " " + sub.name);
+        })
+      )
+    ),
+
+    // Pause months
+    React.createElement("div", { style: { marginBottom: 24 } },
+      React.createElement("label", { className: "lbl" }, "Pause months (tap to select)"),
+      React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+        MONTHS.map((name, idx) =>
+          React.createElement("button", {
+            key: idx, className: "btn bsm",
+            style: {
+              background: local.pauseMonths.includes(idx) ? G.warn + "33" : G.border,
+              color: local.pauseMonths.includes(idx) ? G.warn : G.muted,
+              border: local.pauseMonths.includes(idx) ? "1px solid " + G.warn + "66" : "1px solid transparent",
+              minWidth: 44
+            },
+            onClick: () => togglePause(idx)
+          }, name)
+        )
+      )
+    ),
+
+    // Calculate button
+    React.createElement("button", {
+      className: "btn bp", style: { width: "100%", padding: 16, fontSize: 16 },
+      onClick: () => { setPlanSettings(local); generateStrategy(local); }
+    }, "\u26A1 Calculate Plan"),
+    React.createElement("button", { className: "btn bg", style: { width: "100%", marginTop: 8 }, onClick: () => setShowSettings(false) }, "Cancel")
+  )
+);
+```
+
+};
+
+// Calendar grid (iPad/desktop only)
+const CalendarGrid = ({ plan }) => {
+const rows = [plan.slice(0, 4), plan.slice(4, 8), plan.slice(8, 12)];
+return React.createElement(“div”, { className: “card”, style: { padding: 16, marginBottom: 12 } },
+React.createElement(“p”, { style: { fontWeight: 700, fontSize: 15, marginBottom: 14 } }, “\uD83D\uDCC5 Year Overview”),
+rows.map((row, ri) =>
+React.createElement(“div”, { key: ri, style: { display: “grid”, gridTemplateColumns: “1fr 1fr 1fr 1fr”, gap: 8, marginBottom: 8 } },
+row.map((m) => {
+var _a, _b;
+const color = m.type === “pause” ? G.border : ((_a = m.svc) == null ? void 0 : _a.color) || G.muted;
+return React.createElement(“div”, {
+key: m.month,
+style: {
+background: m.type === “pause” ? G.surface : color + “18”,
+border: “1px solid “ + (m.type === “pause” ? G.border : color + “44”),
+borderRadius: 14, padding: “14px 10px”, textAlign: “center”
+}
+},
+React.createElement(“div”, { style: { fontSize: 11, fontWeight: 700, color: G.muted, marginBottom: 6, textTransform: “uppercase”, letterSpacing: “0.5px” } }, MONTHS[m.calMonth]),
+React.createElement(“div”, { style: { fontSize: 28, marginBottom: 6 } }, m.type === “pause” ? “\u23F8” : ((_b = m.svc) == null ? void 0 : _b.icon) || “\uD83D\uDCFA”),
+React.createElement(“div”, { style: { fontSize: 12, fontWeight: 700, color: m.type === “pause” ? G.muted : color } },
+m.type === “pause” ? “Pause” : (m.svc?.name || “”).split(” “)[0]
+),
+React.createElement(“div”, { style: { fontSize: 12, fontWeight: 600, color: G.text, marginTop: 4 } },
+m.type === “pause” ? “\u20AC0” : “\u20AC” + (m.price?.toFixed(2) || “0”)
+)
+);
+})
+)
+)
+);
+};
+
+// Non-premium screen
+if (!user.isPremium) return React.createElement(“div”, { className: “scr fu” },
+React.createElement(“div”, { style: { padding: “20px 0 16px” } },
+React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Switch Strategy”),
+React.createElement(“p”, { style: { color: G.muted, fontSize: 14, marginTop: 4 } }, “Rotate smart, pay less”)
+),
+React.createElement(“div”, { className: “hero”, style: { marginBottom: 16 } },
+React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginBottom: 6 } }, “You can save”),
+React.createElement(“div”, { className: “heroamt” }, fmt(savings.huidigJaar * 0.5)),
+React.createElement(“p”, { style: { fontSize: 13, color: “#7abf9a”, marginTop: 6 } }, “per year (estimate)”)
+),
+React.createElement(“div”, { className: “card”, style: { padding: 20, marginBottom: 14 } },
+React.createElement(“p”, { style: { fontWeight: 700, marginBottom: 12 } }, “Comparison”),
+React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 8, fontSize: 14 } },
+React.createElement(“span”, { style: { color: G.muted } }, “Current per year”),
+React.createElement(“span”, { style: { fontWeight: 700, color: G.danger } }, fmt(savings.huidigJaar))
+),
+React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 14, fontSize: 14 } },
+React.createElement(“span”, { style: { color: G.muted } }, “With Switch Strategy”),
+React.createElement(“span”, { style: { fontWeight: 700, color: G.accent } }, fmt(savings.huidigJaar * 0.5))
+),
+React.createElement(“div”, { style: { background: “#00e5a010”, border: “1px solid #00e5a030”, borderRadius: 12, padding: 14, textAlign: “center” } },
+React.createElement(“p”, { style: { fontSize: 18, color: G.accent, fontWeight: 800 } }, fmt(savings.huidigJaar * 0.5) + “ per year”),
+React.createElement(“p”, { style: { fontSize: 11, color: G.muted, marginTop: 4 } }, “Exact figures after upgrading”)
+)
+),
+React.createElement(“button”, { className: “btn bprem”, style: { width: “100%”, padding: “16px” }, onClick: upgradePremium },
+React.createElement(Ico, { n: “crown” }), “ Upgrade to Premium \u2014 \u20AC10/year”
+)
+);
+
+const wlItems = watchlist.filter((w) => w.status !== “finished”);
+const byPlatform = SERVICES.map((s2) => ({
+…s2,
+items: wlItems.filter((w) => w.platform === s2.id),
+totalMonths: wlItems.filter((w) => w.platform === s2.id && w.type === “series”).reduce((sum, w) => {
+const totalEps = w.totalEpisodes != null ? w.totalEpisodes : (w.episodes || 0) * (w.seasons || 1);
+const b = calcBinge(totalEps, w.epDuration || 45, planSettings.evenings || 3);
+return sum + ((b == null ? void 0 : b.months) || 0);
+}, 0)
+})).filter((s2) => s2.items.length > 0);
+
+return React.createElement(“div”, { className: “scr fu” },
+// Header
+React.createElement(“div”, { style: { padding: “20px 0 16px”, display: “flex”, alignItems: “center”, justifyContent: “space-between” } },
+React.createElement(“div”, null,
+React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Switch Strategy”),
+React.createElement(“span”, { className: “tag tp”, style: { marginTop: 4, display: “inline-flex” } },
+React.createElement(Ico, { n: “crown”, size: 12 }), “ Premium”
+)
+),
+React.createElement(“button”, {
+className: “btn bp bsm”,
+onClick: () => setShowSettings(true)
+}, strategy ? “\u21BA Recalculate” : “\u26A1 Generate Plan”)
+),
+
+```
+// Watchlist analysis
+byPlatform.length > 0 && React.createElement("div", { className: "card", style: { padding: 16, marginBottom: 12 } },
+  React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 12 } },
+    React.createElement(Ico, { n: "zap", size: 16 }),
+    React.createElement("p", { style: { fontWeight: 700, fontSize: 15 } }, "Watchlist analysis")
+  ),
+  byPlatform.map((s2) =>
+    React.createElement("div", { key: s2.id, style: { display: "flex", alignItems: "center", gap: 10, marginBottom: 10, padding: "10px 12px", background: G.surface, borderRadius: 12 } },
+      React.createElement("div", { style: { width: 36, height: 36, borderRadius: 10, background: s2.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 } }, s2.icon),
+      React.createElement("div", { style: { flex: 1 } },
+        React.createElement("p", { style: { fontWeight: 600, fontSize: 14 } }, s2.name),
+        React.createElement("p", { style: { fontSize: 12, color: G.muted } }, s2.items.length + " title" + (s2.items.length !== 1 ? "s" : ""))
+      ),
+      s2.totalMonths > 0 && React.createElement("div", { style: { textAlign: "right" } },
+        React.createElement("p", { style: { fontWeight: 700, color: G.accent, fontSize: 14 } }, s2.totalMonths + " mo"),
+        React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "needed")
+      )
+    )
+  )
+),
+
+// Empty state
+!strategy && React.createElement("div", { className: "card", style: { padding: 40, textAlign: "center", color: G.muted } },
+  React.createElement("p", { style: { fontSize: 40, marginBottom: 12 } }, "\uD83D\uDD04"),
+  React.createElement("p", { style: { fontWeight: 600, color: G.text, marginBottom: 6 } }, "Ready to save?"),
+  React.createElement("p", { style: { fontSize: 14 } }, "Tap \u201CGenerate Plan\u201D to set your preferences and get a personalized yearly schedule.")
+),
+
+// Plan output
+strategy && React.createElement(React.Fragment, null,
+  // Savings hero
+  React.createElement("div", { className: "hero", style: { marginBottom: 14 } },
+    React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginBottom: 6 } }, "Annual savings"),
+    React.createElement("div", { className: "heroamt" }, fmt(savings.besparing)),
+    React.createElement("p", { style: { fontSize: 13, color: "#7abf9a", marginTop: 6 } },
+      fmt(savings.strategieJaar) + " with plan vs " + fmt(savings.huidigJaar) + " current"
+    )
+  ),
+
+  // Settings summary chips
+  strategy.settings && React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 } },
+    React.createElement("span", { className: "tag ti" }, "\uD83C\uDF19 " + (strategy.settings.evenings || 3) + " evenings/wk"),
+    React.createElement("span", { className: "tag ti" }, "\uD83D\uDCB0 max \u20AC" + (strategy.settings.maxBudget || 20) + "/mo"),
+    strategy.settings.alwaysKeep && React.createElement("span", { className: "tag ta" },
+      "\u2665 " + (SERVICES.find((s2) => s2.id === strategy.settings.alwaysKeep)?.name || "")
+    ),
+    strategy.settings.pauseMonths?.length > 0 && React.createElement("span", { className: "tag tl" },
+      "\u23F8 " + strategy.settings.pauseMonths.map((m) => MONTHS[m]).join(", ")
+    )
+  ),
+
+  // Calendar grid — iPad/desktop only
+  wide && React.createElement(CalendarGrid, { plan: strategy.plan }),
+
+  // Monthly breakdown — always shown
+  React.createElement("div", { className: "card", style: { padding: 16 } },
+    React.createElement("p", { style: { fontWeight: 700, marginBottom: 12 } }, "Monthly breakdown"),
+    strategy.plan.map((m, i) => {
+      var _a, _b;
+      const shows = wlItems.filter((w) => w.platform === m.serviceId);
+      return React.createElement("div", { key: i, style: { display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid " + G.border } },
+        React.createElement("div", { style: { width: 36, fontWeight: 700, color: G.muted, fontSize: 13 } }, MONTHS[m.calMonth]),
+        React.createElement("div", { style: { fontSize: 20 } }, m.type === "pause" ? "\u23F8" : ((_a = m.svc) == null ? void 0 : _a.icon) || "\uD83D\uDCFA"),
+        React.createElement("div", { style: { flex: 1 } },
+          React.createElement("p", { style: { fontWeight: 600, fontSize: 14 } },
+            m.type === "pause" ? (m.userPause ? "Pause \u2014 your choice" : "Pause month") : (_b = m.svc) == null ? void 0 : _b.name
+          ),
+          m.type === "active" && shows.length > 0 && React.createElement("p", { style: { fontSize: 11, color: G.muted, marginTop: 2 } }, shows.map((s2) => s2.title).join(", "))
+        ),
+        React.createElement("div", { style: { fontWeight: 700, color: m.type === "pause" ? G.accent : G.text } },
+          m.type === "pause" ? "\u20AC0" : "\u20AC" + (m.price?.toFixed(2) || "0")
+        )
+      );
+    }),
+    // Totals
+    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "12px 0 0", fontWeight: 800 } },
+      React.createElement("span", { style: { color: G.muted } }, "Total with Switch Strategy"),
+      React.createElement("span", { style: { color: G.accent } }, fmt(savings.strategieJaar))
+    ),
+    React.createElement("div", { style: { display: "flex", justifyContent: "space-between", padding: "8px 0 0" } },
+      React.createElement("span", { style: { color: G.muted, fontSize: 13 } }, "Savings vs. current"),
+      React.createElement("span", { style: { color: G.accent, fontSize: 13, fontWeight: 700 } }, fmt(savings.besparing))
+    )
+  )
+),
+
+// Settings sheet
+showSettings && React.createElement(SettingsSheet, null)
+```
+
+);
+}
+
+function SettingsScreen({ user, setUser, notifs, setNotifs, upgradePremium, openPwSheet }) {
+const [showPwForm, setShowPwForm] = useState(false);
+const [pwForm, setPwForm] = useState({ current: “”, newPw: “”, confirm: “” });
+const [pwMsg, setPwMsg] = useState(””);
+const [showPayment, setShowPayment] = useState(false);
+const [notifEnabled, setNotifEnabled] = useState((notifs == null ? void 0 : notifs.enabled) !== false);
+const shareApp = () => {
+var _a;
+if (navigator.share) {
+navigator.share({ title: “StreamSwitch”, text: “Manage your streaming subscriptions smarter!”, url: “https://streamswitcher.vercel.app” });
+} else {
+(_a = navigator.clipboard) == null ? void 0 : _a.writeText(“https://streamswitcher.vercel.app”);
+alert(“Link copied to clipboard!”);
+}
+};
+const savePw = () => {
+if (!pwForm.current) return setPwMsg(“Enter your current password.”);
+if (pwForm.newPw.length < 6) return setPwMsg(“New password must be at least 6 characters.”);
+if (pwForm.newPw !== pwForm.confirm) return setPwMsg(“Passwords do not match.”);
+setPwMsg(”\u2705 Password changed successfully!”);
+setPwForm({ current: “”, newPw: “”, confirm: “” });
+setTimeout(() => {
+setPwMsg(””);
+setShowPwForm(false);
+}, 2e3);
+};
+const toggleNotifs = async () => {
+if (!notifEnabled) {
+if (“Notification” in window) {
+const perm = await Notification.requestPermission();
+if (perm === “granted”) {
+setNotifEnabled(true);
+setNotifs((n) => __spreadProps(__spreadValues({}, n), { enabled: true }));
+new Notification(“StreamSwitch”, { body: “Notifications enabled! \u{1F389}”, icon: “/icon.png” });
+} else {
+alert(“Please allow notifications in your browser settings.”);
+}
+}
+} else {
+setNotifEnabled(false);
+setNotifs((n) => __spreadProps(__spreadValues({}, n), { enabled: false }));
+}
+};
+return /* @**PURE** */ React.createElement(“div”, { className: “scr fu” }, /* @**PURE** */ React.createElement(“div”, { style: { padding: “20px 0 16px” } }, /* @**PURE** */ React.createElement(“h2”, { style: { fontSize: 22, fontWeight: 800, letterSpacing: “-0.5px” } }, “Settings”)), /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14 } }, /* @**PURE** */ React.createElement(“div”, { style: { padding: “16px 16px 12px” } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 12 } }, “Account”), /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Email”), /* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, marginBottom: 10 } }, user.email), /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted } }, “Plan”), /* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, color: user.isPremium ? G.premium : G.text } }, user.isPremium ? “\u2B50 Premium” : “Free”)), /* @**PURE** */ React.createElement(“div”, { style: { height: 1, background: G.border } }), /* @**PURE** */ React.createElement(
+“button”,
+{
+className: “btn bg”,
+style: { margin: 12, width: “calc(100% - 24px)”, justifyContent: “flex-start”, gap: 10 },
+onClick: () => setShowPwForm((v) => !v)
+},
+“\u{1F511} Change password”
+), showPwForm && /* @**PURE** */ React.createElement(“div”, { style: { padding: “0 16px 16px” } }, /* @**PURE** */ React.createElement(
+“input”,
+{
+className: “inp”,
+type: “password”,
+placeholder: “Current password”,
+value: pwForm.current,
+onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { current: e.target.value })),
+style: { marginBottom: 8 }
+}
+), /* @**PURE** */ React.createElement(
+“input”,
+{
+className: “inp”,
+type: “password”,
+placeholder: “New password”,
+value: pwForm.newPw,
+onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { newPw: e.target.value })),
+style: { marginBottom: 8 }
+}
+), /* @**PURE** */ React.createElement(
+“input”,
+{
+className: “inp”,
+type: “password”,
+placeholder: “Confirm new password”,
+value: pwForm.confirm,
+onChange: (e) => setPwForm((f) => __spreadProps(__spreadValues({}, f), { confirm: e.target.value })),
+style: { marginBottom: 8 }
+}
+), pwMsg && /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: pwMsg.includes(”\u2705”) ? G.accent : G.danger, marginBottom: 8 } }, pwMsg), /* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%” }, onClick: savePw }, “Save password”))), /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14, padding: “16px” } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 12 } }, “Notifications”), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “space-between” } }, /* @**PURE** */ React.createElement(“div”, null, /* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600, fontSize: 15 } }, “\u{1F514} Push notifications”), /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, “Renewal reminders & updates”)), /* @**PURE** */ React.createElement(Toggle, { value: notifEnabled, onChange: toggleNotifs }))), !user.isPremium && /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14, padding: 16, background: “linear-gradient(135deg,#1a1400,#0a0a00)”, border: “1px solid #f7c94833” } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.premium, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 8 } }, “Premium”), /* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, fontSize: 16, marginBottom: 4 } }, “Unlock Switch Strategy”), /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 13, color: G.muted, marginBottom: 12 } }, “Save up to 50% on your subscriptions with smart rotation planning.”), /* @**PURE** */ React.createElement(“button”, { className: “btn bprem”, style: { width: “100%” }, onClick: () => setShowPayment(true) }, “\u2728 Upgrade to Premium \u2014 \u20AC10/year”)), showPayment && /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && setShowPayment(false) }, /* @**PURE** */ React.createElement(“div”, { className: “sh” }, /* @**PURE** */ React.createElement(“div”, { className: “hndl” }), /* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 20, marginBottom: 4 } }, “Upgrade to Premium”), /* @**PURE** */ React.createElement(“p”, { style: { color: G.muted, fontSize: 13, marginBottom: 20 } }, “One-time payment, lifetime access”), /* @**PURE** */ React.createElement(“div”, { style: { background: G.card, borderRadius: 14, padding: 16, marginBottom: 16 } }, /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between”, marginBottom: 8 } }, /* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “StreamSwitch Premium”), /* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700 } }, “\u20AC10.00”)), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between” } }, /* @**PURE** */ React.createElement(“span”, { style: { color: G.muted } }, “VAT”), /* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700 } }, “\u20AC0.00”)), /* @**PURE** */ React.createElement(“div”, { style: { height: 1, background: G.border, margin: “12px 0” } }), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, justifyContent: “space-between” } }, /* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 700 } }, “Total”), /* @**PURE** */ React.createElement(“span”, { style: { fontWeight: 800, color: G.accent } }, “\u20AC10.00”))), /* @**PURE** */ React.createElement(“div”, { style: { background: G.surface, borderRadius: 14, padding: 16, marginBottom: 16 } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, marginBottom: 8 } }, “\u{1F4B3} Card number”), /* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “1234 5678 9012 3456”, style: { marginBottom: 8 } }), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, gap: 8 } }, /* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “MM/YY”, style: { flex: 1 } }), /* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “CVV”, style: { flex: 1 } }))), /* @**PURE** */ React.createElement(“button”, { className: “btn bprem”, style: { width: “100%”, padding: 16, marginBottom: 8 }, onClick: () => {
+upgradePremium();
+setShowPayment(false);
+alert(”\u{1F389} Welcome to Premium! (Demo mode \u2014 no real payment processed)”);
+} }, “Pay \u20AC10.00”), /* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%” }, onClick: () => setShowPayment(false) }, “Cancel”), /* @**PURE** */ React.createElement(“p”, { style: { textAlign: “center”, fontSize: 11, color: G.muted, marginTop: 12 } }, “\u{1F512} Demo mode \u2014 no real payment processed”))), /* @**PURE** */ React.createElement(“div”, { className: “card”, style: { marginBottom: 14, padding: 16 } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 11, color: G.muted, fontWeight: 700, textTransform: “uppercase”, letterSpacing: “1px”, marginBottom: 12 } }, “Share”), /* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%”, justifyContent: “flex-start”, gap: 10 }, onClick: shareApp }, “\u{1F4E4} Share StreamSwitch”)), /* @**PURE** */ React.createElement(“button”, { className: “btn bd”, style: { width: “100%”, marginTop: 4 }, onClick: () => {
+setUser(null);
+LS.set(“ss_user”, null);
+} }, “Sign out”), /* @**PURE** */ React.createElement(“p”, { style: { textAlign: “center”, fontSize: 11, color: G.muted, marginTop: 14 } }, “StreamSwitch v3.0”));
 }
 function SubSheet({ editingSub, subForm, setSubForm, saveSub, onClose }) {
-  const upd = (k, v) => setSubForm((f) => __spreadProps(__spreadValues({}, f), { [k]: v }));
-  return /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && onClose() }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { className: "hndl" }), /* @__PURE__ */ React.createElement("h3", { style: { fontWeight: 800, fontSize: 18, marginBottom: 18 } }, editingSub ? "Edit subscription" : "Add subscription"), !editingSub && /* @__PURE__ */ React.createElement("div", { style: { marginBottom: 18 } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted, fontWeight: 600, marginBottom: 10 } }, "Choose a service"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, SERVICES.map((p) => /* @__PURE__ */ React.createElement(
-    "button",
-    {
-      key: p.id,
-      className: "btn bsm",
-      onClick: () => upd("serviceId", p.id) || setSubForm((f) => __spreadProps(__spreadValues({}, f), { serviceId: p.id, name: p.name, price: String(p.price), color: p.color, icon: p.icon, url: p.url })),
-      style: { background: subForm.serviceId === p.id ? p.color : G.border, color: subForm.serviceId === p.id ? "white" : G.text }
-    },
-    p.icon,
-    " ",
-    p.name
-  )))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 13 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Name"), /* @__PURE__ */ React.createElement("input", { className: "inp", placeholder: "Netflix", value: subForm.name, onChange: (e) => upd("name", e.target.value) })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Maandprijs (\u20AC)"), /* @__PURE__ */ React.createElement("input", { className: "inp", type: "text", inputMode: "decimal", placeholder: "17.99", value: subForm.price, onChange: (e) => upd("price", e.target.value) })), /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, "Renewal date"), /* @__PURE__ */ React.createElement("input", { className: "inp", type: "date", value: subForm.renewalDate, onChange: (e) => upd("renewalDate", e.target.value) })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: G.surface, borderRadius: 11, border: `1px solid ${G.border}` } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 600 } }, "Auto-renew"), /* @__PURE__ */ React.createElement(Toggle, { value: subForm.autoRenew, onChange: (v) => upd("autoRenew", v) })), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: saveSub }, editingSub ? "Save" : "Add"), /* @__PURE__ */ React.createElement("button", { className: "btn bg", style: { width: "100%" }, onClick: onClose }, "Cancel"))));
+const upd = (k, v) => setSubForm((f) => __spreadProps(__spreadValues({}, f), { [k]: v }));
+return /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && onClose() }, /* @**PURE** */ React.createElement(“div”, { className: “sh” }, /* @**PURE** */ React.createElement(“div”, { className: “hndl” }), /* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 18, marginBottom: 18 } }, editingSub ? “Edit subscription” : “Add subscription”), !editingSub && /* @**PURE** */ React.createElement(“div”, { style: { marginBottom: 18 } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 12, color: G.muted, fontWeight: 600, marginBottom: 10 } }, “Choose a service”), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexWrap: “wrap”, gap: 8 } }, SERVICES.map((p) => /* @**PURE** */ React.createElement(
+“button”,
+{
+key: p.id,
+className: “btn bsm”,
+onClick: () => upd(“serviceId”, p.id) || setSubForm((f) => __spreadProps(__spreadValues({}, f), { serviceId: p.id, name: p.name, price: String(p.price), color: p.color, icon: p.icon, url: p.url })),
+style: { background: subForm.serviceId === p.id ? p.color : G.border, color: subForm.serviceId === p.id ? “white” : G.text }
+},
+p.icon,
+“ “,
+p.name
+)))), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexDirection: “column”, gap: 13 } }, /* @**PURE** */ React.createElement(“div”, null, /* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Name”), /* @**PURE** */ React.createElement(“input”, { className: “inp”, placeholder: “Netflix”, value: subForm.name, onChange: (e) => upd(“name”, e.target.value) })), /* @**PURE** */ React.createElement(“div”, null, /* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Maandprijs (\u20AC)”), /* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “text”, inputMode: “decimal”, placeholder: “17.99”, value: subForm.price, onChange: (e) => upd(“price”, e.target.value) })), /* @**PURE** */ React.createElement(“div”, null, /* @**PURE** */ React.createElement(“label”, { className: “lbl” }, “Renewal date”), /* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “date”, value: subForm.renewalDate, onChange: (e) => upd(“renewalDate”, e.target.value) })), /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, alignItems: “center”, justifyContent: “space-between”, padding: “12px 14px”, background: G.surface, borderRadius: 11, border: `1px solid ${G.border}` } }, /* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 600 } }, “Auto-renew”), /* @**PURE** */ React.createElement(Toggle, { value: subForm.autoRenew, onChange: (v) => upd(“autoRenew”, v) })), /* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: saveSub }, editingSub ? “Save” : “Add”), /* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%” }, onClick: onClose }, “Cancel”))));
 }
 function PwSheet({ user, setUser, onClose }) {
-  const [form, setForm] = useState({ current: "", next: "", confirm: "" });
-  const [err, setErr] = useState("");
-  const [ok, setOk] = useState(false);
-  const [show, setShow] = useState({ current: false, next: false, confirm: false });
-  const save = () => {
-    setErr("");
-    if (!form.current || !form.next || !form.confirm) {
-      setErr("Vul alle velden in.");
-      return;
-    }
-    if (form.current !== user.password) {
-      setErr("Huidig wachtwoord klopt niet.");
-      return;
-    }
-    if (form.next.length < 6) {
-      setErr("Minimaal 6 tekens.");
-      return;
-    }
-    if (form.next !== form.confirm) {
-      setErr("Wachtwoorden komen niet overeen.");
-      return;
-    }
-    setUser((u) => {
-      const n = __spreadProps(__spreadValues({}, u), { password: form.next });
-      LS.set("ss_user", n);
-      return n;
-    });
-    setOk(true);
-    setTimeout(() => onClose(), 1600);
-  };
-  return /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && onClose() }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { className: "hndl" }), /* @__PURE__ */ React.createElement("h3", { style: { fontWeight: 800, fontSize: 18, marginBottom: 20 } }, "Wachtwoord wijzigen"), ok ? /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", padding: "30px 0" } }, /* @__PURE__ */ React.createElement("p", { style: { fontSize: 52, marginBottom: 12 } }, "\u2705"), /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, color: G.accent, fontSize: 18 } }, "Wachtwoord gewijzigd!")) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 13 } }, [{ k: "current", l: "Current password", p: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", a: "current-password" }, { k: "next", l: "New password", p: "Minimum 6 characters", a: "new-password" }, { k: "confirm", l: "Bevestigen", p: "Repeat password", a: "new-password" }].map(({ k, l, p, a }) => /* @__PURE__ */ React.createElement("div", { key: k }, /* @__PURE__ */ React.createElement("label", { className: "lbl" }, l), /* @__PURE__ */ React.createElement("div", { className: "iw" }, /* @__PURE__ */ React.createElement("input", { className: "inp", type: show[k] ? "text" : "password", placeholder: p, autoComplete: a, value: form[k], onChange: (e) => setForm((f) => __spreadProps(__spreadValues({}, f), { [k]: e.target.value })) }), /* @__PURE__ */ React.createElement("button", { className: "eyeb", onClick: () => setShow((v) => __spreadProps(__spreadValues({}, v), { [k]: !v[k] })), tabIndex: -1 }, /* @__PURE__ */ React.createElement(Ico, { n: show[k] ? "eyeoff" : "eye" }))))), err && /* @__PURE__ */ React.createElement("p", { style: { color: G.danger, fontSize: 13, background: "#2a1020", padding: "10px 14px", borderRadius: 10 } }, err), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: save }, "Save"), /* @__PURE__ */ React.createElement("button", { className: "btn bg", style: { width: "100%" }, onClick: onClose }, "Cancel"))));
+const [form, setForm] = useState({ current: “”, next: “”, confirm: “” });
+const [err, setErr] = useState(””);
+const [ok, setOk] = useState(false);
+const [show, setShow] = useState({ current: false, next: false, confirm: false });
+const save = () => {
+setErr(””);
+if (!form.current || !form.next || !form.confirm) {
+setErr(“Vul alle velden in.”);
+return;
+}
+if (form.current !== user.password) {
+setErr(“Huidig wachtwoord klopt niet.”);
+return;
+}
+if (form.next.length < 6) {
+setErr(“Minimaal 6 tekens.”);
+return;
+}
+if (form.next !== form.confirm) {
+setErr(“Wachtwoorden komen niet overeen.”);
+return;
+}
+setUser((u) => {
+const n = __spreadProps(__spreadValues({}, u), { password: form.next });
+LS.set(“ss_user”, n);
+return n;
+});
+setOk(true);
+setTimeout(() => onClose(), 1600);
+};
+return /* @**PURE** */ React.createElement(“div”, { className: “ov”, onClick: (e) => e.target === e.currentTarget && onClose() }, /* @**PURE** */ React.createElement(“div”, { className: “sh” }, /* @**PURE** */ React.createElement(“div”, { className: “hndl” }), /* @**PURE** */ React.createElement(“h3”, { style: { fontWeight: 800, fontSize: 18, marginBottom: 20 } }, “Wachtwoord wijzigen”), ok ? /* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, padding: “30px 0” } }, /* @**PURE** */ React.createElement(“p”, { style: { fontSize: 52, marginBottom: 12 } }, “\u2705”), /* @**PURE** */ React.createElement(“p”, { style: { fontWeight: 700, color: G.accent, fontSize: 18 } }, “Wachtwoord gewijzigd!”)) : /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, flexDirection: “column”, gap: 13 } }, [{ k: “current”, l: “Current password”, p: “\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022”, a: “current-password” }, { k: “next”, l: “New password”, p: “Minimum 6 characters”, a: “new-password” }, { k: “confirm”, l: “Bevestigen”, p: “Repeat password”, a: “new-password” }].map(({ k, l, p, a }) => /* @**PURE** */ React.createElement(“div”, { key: k }, /* @**PURE** */ React.createElement(“label”, { className: “lbl” }, l), /* @**PURE** */ React.createElement(“div”, { className: “iw” }, /* @**PURE** */ React.createElement(“input”, { className: “inp”, type: show[k] ? “text” : “password”, placeholder: p, autoComplete: a, value: form[k], onChange: (e) => setForm((f) => __spreadProps(__spreadValues({}, f), { [k]: e.target.value })) }), /* @**PURE** */ React.createElement(“button”, { className: “eyeb”, onClick: () => setShow((v) => __spreadProps(__spreadValues({}, v), { [k]: !v[k] })), tabIndex: -1 }, /* @**PURE** */ React.createElement(Ico, { n: show[k] ? “eyeoff” : “eye” }))))), err && /* @**PURE** */ React.createElement(“p”, { style: { color: G.danger, fontSize: 13, background: “#2a1020”, padding: “10px 14px”, borderRadius: 10 } }, err), /* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: save }, “Save”), /* @**PURE** */ React.createElement(“button”, { className: “btn bg”, style: { width: “100%” }, onClick: onClose }, “Cancel”))));
 }
 function StreamSwitch() {
-  const [user, setUser] = useState(() => LS.get("ss_user", null));
-  const [authMode, setAuthMode] = useState("login");
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPass, setAuthPass] = useState("");
-  const [authError, setAuthError] = useState("");
-  const [showAuthPass, setShowAuthPass] = useState(false);
-  const [tab, setTab] = useState("dashboard");
-  const [subs, setSubs] = useState(() => LS.get("ss_subs", DEF_SUBS));
-  const [showSubSheet, setShowSubSheet] = useState(false);
-  const [editingSub, setEditingSub] = useState(null);
-  const [subForm, setSubForm] = useState({ serviceId: "", name: "", price: "", renewalDate: addDays(30), autoRenew: true, color: "#00e5a0", icon: "\u{1F4FA}", url: "" });
-  const [watchlist, setWatchlist] = useState(() => LS.get("ss_watchlist", DEF_WL));
-  const [strategy, setStrategy] = useState(null);
-  const [notifs, setNotifs] = useState(() => LS.get("ss_notifs", true));
-  const [showPwSheet, setShowPwSheet] = useState(false);
-  const totalMonthly = useMemo(() => subs.reduce((s, a) => s + a.price, 0), [subs]);
-  const savings = useMemo(() => calcSavings(subs, strategy == null ? void 0 : strategy.plan), [subs, strategy]);
-  const getStatus = (sub) => {
-    const wlCount = watchlist.filter((w) => w.platform === sub.serviceId && w.status !== "finished").length;
-    if (!sub.autoRenew) return { label: "Inactief", cls: "ti", dot: G.muted };
-    if (daysLeft(sub.renewalDate) <= 30 && wlCount === 0) return { label: "Low usage", cls: "tl", dot: G.warn };
-    return { label: "Active", cls: "ta", dot: G.accent };
-  };
-  const upgradePremium = () => setUser((u) => {
-    const n = __spreadProps(__spreadValues({}, u), { isPremium: true });
-    LS.set("ss_user", n);
-    return n;
-  });
-  const handleAuth = () => {
-    if (!authEmail.trim() || !authPass.trim()) {
-      setAuthError("Vul alle velden in.");
-      return;
-    }
-    if (authPass.length < 6) {
-      setAuthError("Password must be at least 6 characters.");
-      return;
-    }
-    const u = { id: genId(), email: authEmail, isPremium: false, password: authPass };
-    setUser(u);
-    LS.set("ss_user", u);
-  };
-  const openAddSub = () => {
-    setEditingSub(null);
-    setSubForm({ serviceId: "", name: "", price: "", renewalDate: addDays(30), autoRenew: true, color: "#00e5a0", icon: "\u{1F4FA}", url: "" });
-    setShowSubSheet(true);
-  };
-  const openEditSub = (s) => {
-    setEditingSub(s);
-    setSubForm(__spreadProps(__spreadValues({}, s), { price: String(s.price) }));
-    setShowSubSheet(true);
-  };
-  const saveSub = () => {
-    if (!subForm.name.trim() || !subForm.price) return;
-    const preset = SERVICES.find((p) => p.id === subForm.serviceId);
-    const s = { id: (editingSub == null ? void 0 : editingSub.id) || genId(), serviceId: subForm.serviceId, name: subForm.name, price: parseFloat(subForm.price.replace(",", ".")), renewalDate: subForm.renewalDate, autoRenew: subForm.autoRenew, color: (preset == null ? void 0 : preset.color) || subForm.color, icon: (preset == null ? void 0 : preset.icon) || subForm.icon, url: (preset == null ? void 0 : preset.url) || subForm.url };
-    setSubs((prev) => {
-      const n = editingSub ? prev.map((x) => x.id === editingSub.id ? s : x) : [...prev, s];
-      LS.set("ss_subs", n);
-      return n;
-    });
-    setShowSubSheet(false);
-    setStrategy(null);
-  };
-  const NAV = [
-    { id: "dashboard", label: "Dashboard", icon: "dashboard" },
-    { id: "subs", label: "Subscriptions", icon: "subs" },
-    { id: "watchlist", label: "Watchlist", icon: "list" },
-    { id: "news", label: "Suggestions", icon: "movie" },
-    { id: "switch", label: "Switch", icon: "switch" }
-  ];
-  if (!user) return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: G.bg, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24 } }, /* @__PURE__ */ React.createElement("style", null, CSS), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "center", marginBottom: 36 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 52, marginBottom: 10 } }, "\u{1F4FA}"), /* @__PURE__ */ React.createElement("h1", { style: { fontSize: 32, fontWeight: 900, letterSpacing: "-1px", color: G.text } }, "Stream", /* @__PURE__ */ React.createElement("span", { style: { color: G.accent } }, "Switch")), /* @__PURE__ */ React.createElement("p", { style: { color: G.muted, marginTop: 8, fontSize: 15 } }, "Smart streaming. Smarter spending.")), /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 360, display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", background: G.surface, borderRadius: 12, padding: 4, border: `1px solid ${G.border}` } }, ["login", "register"].map((m) => /* @__PURE__ */ React.createElement("button", { key: m, onClick: () => setAuthMode(m), style: { flex: 1, padding: "9px", border: "none", cursor: "pointer", fontFamily: "Outfit,sans-serif", fontWeight: 600, fontSize: 14, borderRadius: 9, background: authMode === m ? G.card : "transparent", color: authMode === m ? G.text : G.muted } }, m === "login" ? "Sign in" : "Sign up"))), /* @__PURE__ */ React.createElement("input", { className: "inp", type: "email", placeholder: "Emailadres", value: authEmail, onChange: (e) => setAuthEmail(e.target.value), autoComplete: "email" }), /* @__PURE__ */ React.createElement("div", { className: "iw" }, /* @__PURE__ */ React.createElement("input", { className: "inp", type: showAuthPass ? "text" : "password", placeholder: "Password", value: authPass, onChange: (e) => setAuthPass(e.target.value), onKeyDown: (e) => e.key === "Enter" && handleAuth(), autoComplete: authMode === "login" ? "current-password" : "new-password" }), /* @__PURE__ */ React.createElement("button", { className: "eyeb", onClick: () => setShowAuthPass((v) => !v), tabIndex: -1 }, /* @__PURE__ */ React.createElement(Ico, { n: showAuthPass ? "eyeoff" : "eye" }))), authError && /* @__PURE__ */ React.createElement("p", { style: { color: G.danger, fontSize: 13 } }, authError), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: handleAuth }, authMode === "login" ? "Sign in" : "Create account"), /* @__PURE__ */ React.createElement("p", { style: { textAlign: "center", fontSize: 12, color: G.muted } }, "Probeer gratis \u2014 geen creditcard needed")));
-  return /* @__PURE__ */ React.createElement("div", { className: "ss" }, /* @__PURE__ */ React.createElement("style", null, CSS), tab === "dashboard" && /* @__PURE__ */ React.createElement(Dashboard, { user, subs, watchlist, savings, totalMonthly, getStatus, setSubs, setTab, upgradePremium }), tab === "subs" && /* @__PURE__ */ React.createElement(SubsScreen, { subs, setSubs, watchlist, savings, totalMonthly, getStatus, openAddSub, openEditSub }), tab === "watchlist" && /* @__PURE__ */ React.createElement(WatchScreen, { watchlist, setWatchlist }), tab === "news" && /* @__PURE__ */ React.createElement(NewsScreen, { watchlist, setWatchlist, subs }), tab === "switch" && /* @__PURE__ */ React.createElement(SwitchScreen, { user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }), tab === "settings" && /* @__PURE__ */ React.createElement(SettingsScreen, { user, setUser, notifs, setNotifs, upgradePremium, openPwSheet: () => setShowPwSheet(true) }), /* @__PURE__ */ React.createElement("nav", { className: "nav" }, NAV.map(({ id, label, icon }) => /* @__PURE__ */ React.createElement("button", { key: id, className: `nb${tab === id ? " on" : ""}`, onClick: () => setTab(id) }, /* @__PURE__ */ React.createElement(Ico, { n: icon, size: 22 }), /* @__PURE__ */ React.createElement("span", null, label)))), showSubSheet && /* @__PURE__ */ React.createElement(SubSheet, { editingSub, subForm, setSubForm, saveSub, onClose: () => setShowSubSheet(false) }), showPwSheet && /* @__PURE__ */ React.createElement(PwSheet, { user, setUser, onClose: () => setShowPwSheet(false) }));
+const [user, setUser] = useState(() => LS.get(“ss_user”, null));
+const [authMode, setAuthMode] = useState(“login”);
+const [authEmail, setAuthEmail] = useState(””);
+const [authPass, setAuthPass] = useState(””);
+const [authError, setAuthError] = useState(””);
+const [showAuthPass, setShowAuthPass] = useState(false);
+const [tab, setTab] = useState(“dashboard”);
+const [subs, setSubs] = useState(() => LS.get(“ss_subs”, DEF_SUBS));
+const [showSubSheet, setShowSubSheet] = useState(false);
+const [editingSub, setEditingSub] = useState(null);
+const [subForm, setSubForm] = useState({ serviceId: “”, name: “”, price: “”, renewalDate: addDays(30), autoRenew: true, color: “#00e5a0”, icon: “\u{1F4FA}”, url: “” });
+const [watchlist, setWatchlist] = useState(() => LS.get(“ss_watchlist”, DEF_WL));
+const [strategy, setStrategy] = useState(null);
+const [notifs, setNotifs] = useState(() => LS.get(“ss_notifs”, true));
+const [showPwSheet, setShowPwSheet] = useState(false);
+const totalMonthly = useMemo(() => subs.reduce((s, a) => s + a.price, 0), [subs]);
+const savings = useMemo(() => calcSavings(subs, strategy == null ? void 0 : strategy.plan), [subs, strategy]);
+const getStatus = (sub) => {
+const wlCount = watchlist.filter((w) => w.platform === sub.serviceId && w.status !== “finished”).length;
+if (!sub.autoRenew) return { label: “Inactief”, cls: “ti”, dot: G.muted };
+if (daysLeft(sub.renewalDate) <= 30 && wlCount === 0) return { label: “Low usage”, cls: “tl”, dot: G.warn };
+return { label: “Active”, cls: “ta”, dot: G.accent };
+};
+const upgradePremium = () => setUser((u) => {
+const n = __spreadProps(__spreadValues({}, u), { isPremium: true });
+LS.set(“ss_user”, n);
+return n;
+});
+const handleAuth = () => {
+if (!authEmail.trim() || !authPass.trim()) {
+setAuthError(“Vul alle velden in.”);
+return;
 }
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(/* @__PURE__ */ React.createElement(StreamSwitch, null));
+if (authPass.length < 6) {
+setAuthError(“Password must be at least 6 characters.”);
+return;
+}
+const u = { id: genId(), email: authEmail, isPremium: false, password: authPass };
+setUser(u);
+LS.set(“ss_user”, u);
+};
+const openAddSub = () => {
+setEditingSub(null);
+setSubForm({ serviceId: “”, name: “”, price: “”, renewalDate: addDays(30), autoRenew: true, color: “#00e5a0”, icon: “\u{1F4FA}”, url: “” });
+setShowSubSheet(true);
+};
+const openEditSub = (s) => {
+setEditingSub(s);
+setSubForm(__spreadProps(__spreadValues({}, s), { price: String(s.price) }));
+setShowSubSheet(true);
+};
+const saveSub = () => {
+if (!subForm.name.trim() || !subForm.price) return;
+const preset = SERVICES.find((p) => p.id === subForm.serviceId);
+const s = { id: (editingSub == null ? void 0 : editingSub.id) || genId(), serviceId: subForm.serviceId, name: subForm.name, price: parseFloat(subForm.price.replace(”,”, “.”)), renewalDate: subForm.renewalDate, autoRenew: subForm.autoRenew, color: (preset == null ? void 0 : preset.color) || subForm.color, icon: (preset == null ? void 0 : preset.icon) || subForm.icon, url: (preset == null ? void 0 : preset.url) || subForm.url };
+setSubs((prev) => {
+const n = editingSub ? prev.map((x) => x.id === editingSub.id ? s : x) : […prev, s];
+LS.set(“ss_subs”, n);
+return n;
+});
+setShowSubSheet(false);
+setStrategy(null);
+};
+const NAV = [
+{ id: “dashboard”, label: “Dashboard”, icon: “dashboard” },
+{ id: “subs”, label: “Subscriptions”, icon: “subs” },
+{ id: “watchlist”, label: “Watchlist”, icon: “list” },
+{ id: “news”, label: “Suggestions”, icon: “movie” },
+{ id: “switch”, label: “Switch”, icon: “switch” }
+];
+if (!user) return /* @**PURE** */ React.createElement(“div”, { style: { minHeight: “100vh”, background: G.bg, display: “flex”, flexDirection: “column”, alignItems: “center”, justifyContent: “center”, padding: 24 } }, /* @**PURE** */ React.createElement(“style”, null, CSS), /* @**PURE** */ React.createElement(“div”, { style: { textAlign: “center”, marginBottom: 36 } }, /* @**PURE** */ React.createElement(“div”, { style: { fontSize: 52, marginBottom: 10 } }, “\u{1F4FA}”), /* @**PURE** */ React.createElement(“h1”, { style: { fontSize: 32, fontWeight: 900, letterSpacing: “-1px”, color: G.text } }, “Stream”, /* @**PURE** */ React.createElement(“span”, { style: { color: G.accent } }, “Switch”)), /* @**PURE** */ React.createElement(“p”, { style: { color: G.muted, marginTop: 8, fontSize: 15 } }, “Smart streaming. Smarter spending.”)), /* @**PURE** */ React.createElement(“div”, { style: { width: “100%”, maxWidth: 360, display: “flex”, flexDirection: “column”, gap: 12 } }, /* @**PURE** */ React.createElement(“div”, { style: { display: “flex”, background: G.surface, borderRadius: 12, padding: 4, border: `1px solid ${G.border}` } }, [“login”, “register”].map((m) => /* @**PURE** */ React.createElement(“button”, { key: m, onClick: () => setAuthMode(m), style: { flex: 1, padding: “9px”, border: “none”, cursor: “pointer”, fontFamily: “Outfit,sans-serif”, fontWeight: 600, fontSize: 14, borderRadius: 9, background: authMode === m ? G.card : “transparent”, color: authMode === m ? G.text : G.muted } }, m === “login” ? “Sign in” : “Sign up”))), /* @**PURE** */ React.createElement(“input”, { className: “inp”, type: “email”, placeholder: “Emailadres”, value: authEmail, onChange: (e) => setAuthEmail(e.target.value), autoComplete: “email” }), /* @**PURE** */ React.createElement(“div”, { className: “iw” }, /* @**PURE** */ React.createElement(“input”, { className: “inp”, type: showAuthPass ? “text” : “password”, placeholder: “Password”, value: authPass, onChange: (e) => setAuthPass(e.target.value), onKeyDown: (e) => e.key === “Enter” && handleAuth(), autoComplete: authMode === “login” ? “current-password” : “new-password” }), /* @**PURE** */ React.createElement(“button”, { className: “eyeb”, onClick: () => setShowAuthPass((v) => !v), tabIndex: -1 }, /* @**PURE** */ React.createElement(Ico, { n: showAuthPass ? “eyeoff” : “eye” }))), authError && /* @**PURE** */ React.createElement(“p”, { style: { color: G.danger, fontSize: 13 } }, authError), /* @**PURE** */ React.createElement(“button”, { className: “btn bp”, style: { width: “100%”, padding: “14px” }, onClick: handleAuth }, authMode === “login” ? “Sign in” : “Create account”), /* @**PURE** */ React.createElement(“p”, { style: { textAlign: “center”, fontSize: 12, color: G.muted } }, “Probeer gratis \u2014 geen creditcard needed”)));
+return /* @**PURE** */ React.createElement(“div”, { className: “ss” }, /* @**PURE** */ React.createElement(“style”, null, CSS), tab === “dashboard” && /* @**PURE** */ React.createElement(Dashboard, { user, subs, watchlist, savings, totalMonthly, getStatus, setSubs, setTab, upgradePremium }), tab === “subs” && /* @**PURE** */ React.createElement(SubsScreen, { subs, setSubs, watchlist, savings, totalMonthly, getStatus, openAddSub, openEditSub }), tab === “watchlist” && /* @**PURE** */ React.createElement(WatchScreen, { watchlist, setWatchlist }), tab === “news” && /* @**PURE** */ React.createElement(NewsScreen, { watchlist, setWatchlist, subs }), tab === “switch” && /* @**PURE** */ React.createElement(SwitchScreen, { user, subs, watchlist, savings, strategy, setStrategy, upgradePremium }), tab === “settings” && /* @**PURE** */ React.createElement(SettingsScreen, { user, setUser, notifs, setNotifs, upgradePremium, openPwSheet: () => setShowPwSheet(true) }), /* @**PURE** */ React.createElement(“nav”, { className: “nav” }, NAV.map(({ id, label, icon }) => /* @**PURE** */ React.createElement(“button”, { key: id, className: `nb${tab === id ? " on" : ""}`, onClick: () => setTab(id) }, /* @**PURE** */ React.createElement(Ico, { n: icon, size: 22 }), /* @**PURE** */ React.createElement(“span”, null, label)))), showSubSheet && /* @**PURE** */ React.createElement(SubSheet, { editingSub, subForm, setSubForm, saveSub, onClose: () => setShowSubSheet(false) }), showPwSheet && /* @**PURE** */ React.createElement(PwSheet, { user, setUser, onClose: () => setShowPwSheet(false) }));
+}
+const root = ReactDOM.createRoot(document.getElementById(“root”));
+root.render(/* @**PURE** */ React.createElement(StreamSwitch, null));
 
 </script>
 </body>
