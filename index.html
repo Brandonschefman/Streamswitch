@@ -704,11 +704,12 @@ function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, u
   var _a;
   const [showSettings, setShowSettings] = useState(false);
   const [planSettings, setPlanSettings] = useState({ evenings: 3, maxBudget: 20, alwaysKeep: "", pauseMonths: [] });
-  const [wide, setWide] = useState(typeof window !== "undefined" && window.innerWidth >= 768);
+  const [wide, setWide] = useState(false);
   useEffect(() => {
-    const handler = () => setWide(window.innerWidth >= 768);
-    window.addEventListener("resize", handler);
-    return () => window.removeEventListener("resize", handler);
+    const check = () => setWide(window.innerWidth >= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
   }, []);
   const NOW_MONTH = (/* @__PURE__ */ new Date()).getMonth();
   const generateStrategy = (settings) => {
