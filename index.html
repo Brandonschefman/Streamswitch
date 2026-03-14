@@ -13,10 +13,24 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #08080f; color: #f0f0f8; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    #error { position:fixed; top:0; left:0; right:0; background:#ff3b5c; color:white; padding:16px; font-size:13px; z-index:9999; word-break:break-all; display:none; }
   </style>
 </head>
 <body>
+<div id="error"></div>
 <div id="root"></div>
+<script>
+window.onerror = function(msg, src, line, col, err) {
+  var el = document.getElementById('error');
+  el.style.display = 'block';
+  el.textContent = 'ERROR: ' + msg + ' (line ' + line + ')';
+};
+window.addEventListener('unhandledrejection', function(e) {
+  var el = document.getElementById('error');
+  el.style.display = 'block';
+  el.textContent = 'PROMISE ERROR: ' + (e.reason?.message || e.reason);
+});
+</script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script>
