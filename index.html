@@ -212,8 +212,8 @@ const Toggle = ({ value, onChange, disabled = false }) => /* @__PURE__ */ React.
 );
 const CSS = `
   ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e2e;border-radius:2px}
-  .ss{max-width:900px;margin:0 auto;min-height:100vh}
-  .scr{padding:0 16px 100px}
+  .ss{max-width:900px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
+  .scr{padding:env(safe-area-inset-top,44px) 16px 100px}
   .card{background:#14141f;border:1px solid #1e1e2e;border-radius:18px}
   .cardh{transition:border-color .2s,transform .15s;cursor:pointer}
   .cardh:hover{border-color:#2a2a42;transform:translateY(-1px)}
