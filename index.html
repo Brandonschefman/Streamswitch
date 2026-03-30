@@ -112,7 +112,7 @@ const calcBinge = (episodes, epDuration, eveningsPerWeek, minsPerEvening = 120) 
   return { totalMins, weeks, months };
 };
 const calcSavings = (subs, plan) => {
-  const huidigJaar = subs.reduce((s, a) => s + a.price, 0) * 12;
+  const huidigJaar = subs.filter((s) => !s.paused).reduce((s, a) => s + a.price, 0) * 12;
   if (!(plan == null ? void 0 : plan.length)) return { huidigJaar, strategieJaar: null, besparing: null };
   const strategieJaar = plan.filter((m) => m.type === "active").reduce((s, m) => s + m.price, 0);
   return { huidigJaar, strategieJaar, besparing: Math.max(0, huidigJaar - strategieJaar) };
@@ -202,7 +202,7 @@ const Toggle = ({ value, onChange, disabled = false }) => /* @__PURE__ */ React.
 const CSS = `
   ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e2e;border-radius:2px}
   .ss{max-width:900px;margin:0 auto;min-height:100vh}
-  .scr{padding:max(env(safe-area-inset-top,0px),12px) 16px 100px}
+  .scr{padding:0 16px 100px}
   .card{background:#14141f;border:1px solid #1e1e2e;border-radius:18px}
   .cardh{transition:border-color .2s,transform .15s;cursor:pointer}
   .cardh:hover{border-color:#2a2a42;transform:translateY(-1px)}
@@ -477,7 +477,7 @@ function SubsScreen({ subs, setSubs, watchlist, savings, totalMonthly, getStatus
     const days = daysLeft(sub.renewalDate);
     const st = getStatus(sub);
     const wlCount = watchlist.filter((w) => w.platform === sub.serviceId && w.status !== "finished").length;
-    return /* @__PURE__ */ React.createElement("div", { key: sub.id, className: "card", style: { marginBottom: 10, padding: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 52, height: 52, borderRadius: 14, background: sub.color + "20", border: `2px solid ${sub.color}50`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 } }, sub.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, fontSize: 16 } }, sub.name), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, "Verlengt ", days <= 0 ? "today" : `over ${days} days`, " \xB7 ", wlCount, " title", wlCount !== 1 ? "s" : "")), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 800, fontSize: 18 } }, "\u20AC", sub.price.toFixed(2)), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "/mnd"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 } }, /* @__PURE__ */ React.createElement("span", { className: `tag ${st.cls}` }, /* @__PURE__ */ React.createElement("span", { className: "dot", style: { background: st.dot } }), st.label), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", title: "Open app", onClick: () => {
+    return /* @__PURE__ */ React.createElement("div", { key: sub.id, className: "card", style: { marginBottom: 10, padding: 16, opacity: sub.paused ? 0.7 : 1, border: sub.paused ? "1px solid #ff6b3544" : "1px solid #1e1e2e" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 52, height: 52, borderRadius: 14, background: sub.color + "20", border: `2px solid ${sub.color}50`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 } }, sub.icon), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 700, fontSize: 16 } }, sub.name), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 12, color: G.muted, marginTop: 2 } }, sub.paused ? /* @__PURE__ */ React.createElement("span", { style: { color: "#ff6b35" } }, "\u23F8 Paused \xB7 cancel via ", sub.name) : /* @__PURE__ */ React.createElement(React.Fragment, null, "Renews ", days <= 0 ? "today" : `in ${days} days`, " \xB7 ", wlCount, " title", wlCount !== 1 ? "s" : ""))), /* @__PURE__ */ React.createElement("div", { style: { textAlign: "right" } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 800, fontSize: 18 } }, "\u20AC", sub.price.toFixed(2)), /* @__PURE__ */ React.createElement("p", { style: { fontSize: 11, color: G.muted } }, "/mnd"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 } }, /* @__PURE__ */ React.createElement("span", { className: `tag ${st.cls}` }, /* @__PURE__ */ React.createElement("span", { className: "dot", style: { background: st.dot } }), st.label), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", title: "Open app", onClick: () => {
       var _a;
       return openApp(sub.url, (_a = SERVICES.find((p) => p.id === sub.serviceId)) == null ? void 0 : _a.deepLink);
     } }, /* @__PURE__ */ React.createElement(Ico, { n: "open" })), /* @__PURE__ */ React.createElement(
@@ -742,7 +742,7 @@ function SwitchScreen({ user, subs, watchlist, savings, strategy, setStrategy, u
       sub: subs.find((s2) => s2.serviceId === serviceId),
       service: SERVICES.find((s2) => s2.id === serviceId)
     })).filter((p) => p.service);
-    subs.forEach((sub) => {
+    subs.filter((s2) => !s2.paused).forEach((sub) => {
       if (!sorted.find((p) => p.serviceId === sub.serviceId))
         sorted.push({ serviceId: sub.serviceId, months: 1, sub, service: SERVICES.find((s2) => s2.id === sub.serviceId) });
     });
@@ -962,7 +962,7 @@ function StreamSwitch() {
   const [strategy, setStrategy] = useState(() => LS.get("ss_strategy", null));
   const [notifs, setNotifs] = useState(() => LS.get("ss_notifs", true));
   const [showPwSheet, setShowPwSheet] = useState(false);
-  const totalMonthly = useMemo(() => subs.reduce((s, a) => s + a.price, 0), [subs]);
+  const totalMonthly = useMemo(() => subs.filter((s) => !s.paused).reduce((s, a) => s + a.price, 0), [subs]);
   const savings = useMemo(() => calcSavings(subs, strategy == null ? void 0 : strategy.plan), [subs, strategy]);
   const getStatus = (sub) => {
     const wlCount = watchlist.filter((w) => w.platform === sub.serviceId && w.status !== "finished").length;
