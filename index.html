@@ -13,19 +13,10 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background: #08080f; color: #f0f0f8; font-family: 'Outfit', sans-serif; -webkit-font-smoothing: antialiased; min-height: 100vh; }
-    #error { position:fixed;top:0;left:0;right:0;background:#ff3b5c;color:white;padding:16px;font-size:13px;z-index:9999;word-break:break-all;display:none; }
   </style>
 </head>
 <body>
-<div id="error"></div>
 <div id="root"></div>
-<script>
-window.onerror = function(msg,src,line) {
-  var el = document.getElementById('error');
-  el.style.display = 'block';
-  el.textContent = 'ERROR: ' + msg + ' (line ' + line + ')';
-};
-</script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script>
@@ -212,8 +203,8 @@ const Toggle = ({ value, onChange, disabled = false }) => /* @__PURE__ */ React.
 );
 const CSS = `
   ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e2e;border-radius:2px}
-  .ss{max-width:900px;margin:0 auto;min-height:100vh;padding-top:env(safe-area-inset-top,0px)}
-  .scr{padding:env(safe-area-inset-top,44px) 16px 100px}
+  .ss{max-width:900px;margin:0 auto;min-height:100vh}
+  .scr{padding:0 16px 100px}
   .card{background:#14141f;border:1px solid #1e1e2e;border-radius:18px}
   .cardh{transition:border-color .2s,transform .15s;cursor:pointer}
   .cardh:hover{border-color:#2a2a42;transform:translateY(-1px)}
@@ -584,7 +575,7 @@ function NewsScreen({ watchlist, setWatchlist, subs }) {
     setDetail(null);
   };
   const isAdded = (item) => added[item.id] || wlTitles.has((item.title || item.name || "").toLowerCase());
-  const myProvs = TMDB_PROV.filter((p) => subs.some((s) => s.serviceId === p.serviceId)).map((p) => __spreadValues(__spreadValues({}, p), SERVICES.find((s) => s.id === p.serviceId)));
+  const myProvs = TMDB_PROV.filter((p) => subs.some((s) => s.serviceId === p.serviceId)).filter((p, i, arr) => arr.findIndex((x) => x.serviceId === p.serviceId) === i).map((p) => __spreadValues(__spreadValues({}, p), SERVICES.find((s) => s.id === p.serviceId)));
   const handleTouchStart = (e) => {
     touchStartY.current = e.touches[0].clientY;
   };
@@ -626,7 +617,7 @@ function NewsScreen({ watchlist, setWatchlist, subs }) {
       },
       al ? "\u2713 Added" : "+ Watchlist"
     )));
-  })), detail && /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setDetail(null) }, /* @__PURE__ */ React.createElement("div", { className: "sh" }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 16 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", onClick: () => setDetail(null) }, /* @__PURE__ */ React.createElement(Ico, { n: "x" }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 16 } }, detail.poster_path ? /* @__PURE__ */ React.createElement("img", { src: `${TMDB_IMG}${detail.poster_path}`, alt: "", style: { width: 90, height: 135, borderRadius: 12, objectFit: "cover", flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 90, height: 135, borderRadius: 12, background: G.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, flexShrink: 0 } }, "\ud83c\udfac"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 800, fontSize: 17, lineHeight: 1.3, marginBottom: 6 } }, detail.title || detail.name), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { className: "tag ta" }, /* @__PURE__ */ React.createElement(Ico, { n: "star", size: 11 }), " ", ((_a = detail.vote_average) == null ? void 0 : _a.toFixed(1)) || "?"), /* @__PURE__ */ React.createElement("span", { className: "tag ti" }, (detail.release_date || detail.first_air_date || "").slice(0, 4))))), detail.overview && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: G.muted, lineHeight: 1.6, marginBottom: 16 } }, detail.overview), /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: () => addToWatchlist(detail), disabled: isAdded(detail) }, isAdded(detail) ? "\u2713 Al in je watchlist" : "+ Add to watchlist"))));
+  })), detail && /* @__PURE__ */ React.createElement("div", { className: "ov", onClick: (e) => e.target === e.currentTarget && setDetail(null) }, /* @__PURE__ */ React.createElement("div", { className: "sh", style: { display: "flex", flexDirection: "column", padding: "20px 20px 0" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 16, flexShrink: 0 } }, /* @__PURE__ */ React.createElement("button", { className: "ib", onClick: () => setDetail(null) }, /* @__PURE__ */ React.createElement(Ico, { n: "x" }))), /* @__PURE__ */ React.createElement("div", { style: { overflowY: "auto", flex: 1, paddingBottom: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 14, marginBottom: 16 } }, detail.poster_path ? /* @__PURE__ */ React.createElement("img", { src: `${TMDB_IMG}${detail.poster_path}`, alt: "", style: { width: 90, height: 135, borderRadius: 12, objectFit: "cover", flexShrink: 0 } }) : /* @__PURE__ */ React.createElement("div", { style: { width: 90, height: 135, borderRadius: 12, background: G.surface, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, flexShrink: 0 } }, "\ud83c\udfac"), /* @__PURE__ */ React.createElement("div", { style: { flex: 1 } }, /* @__PURE__ */ React.createElement("p", { style: { fontWeight: 800, fontSize: 17, lineHeight: 1.3, marginBottom: 6 } }, detail.title || detail.name), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { className: "tag ta" }, /* @__PURE__ */ React.createElement(Ico, { n: "star", size: 11 }), " ", ((_a = detail.vote_average) == null ? void 0 : _a.toFixed(1)) || "?"), /* @__PURE__ */ React.createElement("span", { className: "tag ti" }, (detail.release_date || detail.first_air_date || "").slice(0, 4))))), detail.overview && /* @__PURE__ */ React.createElement("p", { style: { fontSize: 14, color: G.muted, lineHeight: 1.6, marginBottom: 16 } }, detail.overview)), /* @__PURE__ */ React.createElement("div", { style: { flexShrink: 0, paddingTop: 12, paddingBottom: 20, background: G.card } }, /* @__PURE__ */ React.createElement("button", { className: "btn bp", style: { width: "100%", padding: "14px" }, onClick: () => addToWatchlist(detail), disabled: isAdded(detail) }, isAdded(detail) ? "\u2713 Already in watchlist" : "+ Add to watchlist")))));
 }
 function PlanSettingsSheet({ planSettings, setPlanSettings, subs, onCalculate, onClose }) {
   const [local, setLocal] = useState(__spreadValues({}, planSettings));
